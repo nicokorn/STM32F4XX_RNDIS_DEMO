@@ -6,7 +6,7 @@ Project:
 <br>RNDIS for ST HAL library
 
 Used target: 
-<br>Blackpill board with stm32f411
+<br>Blackpill board with stm32f411. Link to the BlackPill board: https://www.adafruit.com/product/4877
 
 Usage:	
 <br>To have platform independent network interfaces over usb which is working with Linux, Windows, Mac OS ect.
