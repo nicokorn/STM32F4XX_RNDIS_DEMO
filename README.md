@@ -1,4 +1,4 @@
-# STM32_HAL_RNDIS
+# STM32F4XX_RNDIS_DEMO
 Author: 
 <br>Nico Korn
 
@@ -33,7 +33,7 @@ Info:
 <br>The rndis library is based on the library from Sergey Fetisov: https://github.com/fetisov/lrndis and is using a rndis protocol library from Colin O'Flynn. Many thanks for your efforts! For more general information about RNDIS visit: https://docs.microsoft.com/de-de/windows-hardware/drivers/network/overview
 
 <br>Versions: 
-<br>STM32_HAL_RNDIS 0.2.0.0 
+<br>STM32F4XX_RNDIS_DEMO 0.3.0.0 
 <br>FreeRTOS Kernel V10.3.1 
 <br>STM32Cube_FW_F4_V1.26.0 
 <br>STM32CubeMX 6.3.0 
