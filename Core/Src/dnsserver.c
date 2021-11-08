@@ -1,15 +1,15 @@
 // ****************************************************************************
 /// \file      dnsserver.c
 ///
-/// \brief     dns server module
+/// \brief     dns server c file
 ///
 /// \details   Handles dns requests from clients.
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///
@@ -48,7 +48,7 @@
 #include  <string.h>
 #include  <stdlib.h>
 #include "dnsserver.h"
-#include "tcp.h"
+#include "tcpip.h"
 #include "printf.h"
 
 #include "cmsis_os.h"
@@ -70,16 +70,6 @@
 #define FLAG_RESPCODE               ( 0x0F00 )
 #define FLAG_ZERO                   ( 0x7000 )
 #define FLAG_RECUSRIONAVAIL         ( 0x8000 )
-/*
-	uint8_t rd: 1,     // Recursion Desired 
-	        tc: 1,     // Truncation Flag 
-	        aa: 1,     // Authoritative Answer Flag 
-	        opcode: 4, // Operation code 
-	        qr: 1;     // Query/Response Flag 
-	uint8_t rcode: 4,  // Response Code 
-	        z: 3,      // Zero 
-	        ra: 1;     // Recursion Available 
-*/
 
 // Private types     **********************************************************
 typedef __packed struct DNS_HEADER_s
@@ -115,7 +105,6 @@ const osThreadAttr_t dnsserverHandleTask_attributes = {
   .stack_size = 4 * configMINIMAL_STACK_SIZE * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-
 static void dnsserver_handle( void *pvParameters );
 
 // Global variables ***********************************************************
@@ -146,20 +135,19 @@ void dnsserver_init( void )
 /// \return    none
 void dnsserver_deinit( void )
 {
+   osThreadTerminate(&dnsserverHandleTaskToNotify);
 }
 
 // ----------------------------------------------------------------------------
-/// \brief     Creates a task when if tcp frame arrives from a session and
-///            handles its content. 
-///            Handling GET or POST requests and parsing the uri's.
+/// \brief     The dns handle task listens on udp port 53 for incoming dns
+///            requests.
 ///
 /// \param     [in]  void *pvParameters
 ///
 /// \return    none
 static void dnsserver_handle( void *pvParameters )
 {
-   uint8_t           *pucRxBuffer;
-   uint8_t           *pucTxBuffer;
+   uint8_t           *pucTxRxBuffer;
    BaseType_t        lengthOfbytes;
    static uint32_t   errorDisco;
    static uint32_t   errorReq;
@@ -178,18 +166,15 @@ static void dnsserver_handle( void *pvParameters )
    DNS_QUERY_t       dnsQuery;
    
    // allocate heap for the transmit and receive message
-   pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXRXBUFFERSIZE );
-	pucRxBuffer = ( uint8_t * ) pvPortMalloc( TXRXBUFFERSIZE );
+	pucTxRxBuffer = ( uint8_t * ) pvPortMalloc( TXRXBUFFERSIZE );
    
-   if( pucTxBuffer == NULL || pucRxBuffer == NULL )
+   if( pucTxRxBuffer == NULL )
    {
       vTaskDelete( NULL );
    }
    
    /* Attempt to open the socket. */
-   xListeningSocket = FreeRTOS_socket( FREERTOS_AF_INET,
-                                       FREERTOS_SOCK_DGRAM,/*FREERTOS_SOCK_DGRAM for UDP.*/
-                                       FREERTOS_IPPROTO_UDP );
+   xListeningSocket = FreeRTOS_socket( FREERTOS_AF_INET, FREERTOS_SOCK_DGRAM, FREERTOS_IPPROTO_UDP );
 
    /* Check the socket was created. */
    configASSERT( xListeningSocket != FREERTOS_INVALID_SOCKET );
@@ -204,7 +189,7 @@ static void dnsserver_handle( void *pvParameters )
        interface is used.  By default the block time is portMAX_DELAY, but it
        can be changed using FreeRTOS_setsockopt(). */
        lengthOfbytes = FreeRTOS_recvfrom( xListeningSocket,
-                                   pucRxBuffer,
+                                   pucTxRxBuffer,
                                    TXRXBUFFERSIZE,
                                    0,
                                    &xClient,
@@ -228,7 +213,7 @@ static void dnsserver_handle( void *pvParameters )
          DNS_HEADER_t      *dnsheader;
          uint8_t           namequerylength = 0;
          uint8_t           namequrtyparsed[50] = {0};
-         uint8_t           *namequery = pucRxBuffer + sizeof(DNS_HEADER_t) + 1;
+         uint8_t           *namequery = pucTxRxBuffer + sizeof(DNS_HEADER_t) + 1;
          
          namequerylength = strlen((char const*)namequery);
          if( namequerylength > 50 )
@@ -258,135 +243,55 @@ static void dnsserver_handle( void *pvParameters )
          // compare with host name (this device)
          if( memcmp( namequrtyparsed, HOSTNAMEDNS, strlen(HOSTNAMEDNS) ) != 0 )
          {
-            // not our name
+            // not our hostname
             continue;
          }
          
          // prepare response to query
-         memcpy(pucTxBuffer, pucRxBuffer, lengthOfbytes);
-         dnsheader = (DNS_HEADER_t*)pucTxBuffer;
-         dnsheader->flags |= (uint16_t)FLAG_QRESPONSE;
-         dnsheader->n_record[1] = FreeRTOS_htons(1);
-         dnsresponse = (DNS_RESPONSE_t*)(pucTxBuffer+lengthOfbytes);
-         dnsresponse->name = FreeRTOS_htons(0xC00C);
-         dnsresponse->type = FreeRTOS_htons(1);
-         dnsresponse->dnsclass = FreeRTOS_htons(1);
-         dnsresponse->ttl = FreeRTOS_htonl(32);
-         dnsresponse->len = FreeRTOS_htons(4);
-         dnsresponse->addr = FreeRTOS_inet_addr_quick( IP1, IP2, IP3, IP4 );
+         dnsheader               = (DNS_HEADER_t*)pucTxRxBuffer;
+         dnsheader->flags        |= (uint16_t)FLAG_QRESPONSE;
+         dnsheader->n_record[1]  = FreeRTOS_htons(1);
+         dnsresponse             = (DNS_RESPONSE_t*)(pucTxRxBuffer+lengthOfbytes);
+         dnsresponse->name       = FreeRTOS_htons(0xC00C);
+         dnsresponse->type       = FreeRTOS_htons(1);
+         dnsresponse->dnsclass   = FreeRTOS_htons(1);
+         dnsresponse->ttl        = FreeRTOS_htonl(32);
+         dnsresponse->len        = FreeRTOS_htons(4);
+         dnsresponse->addr       = FreeRTOS_inet_addr_quick( IP1, IP2, IP3, IP4 );
 
-         //xDestinationAddress.sin_addr = FreeRTOS_inet_addr_quick( 255, 255, 255, 255 );
-         //xDestinationAddress.sin_port = FreeRTOS_htons( 68 );
-         FreeRTOS_sendto( xListeningSocket, pucTxBuffer, lengthOfbytes+sizeof(DNS_RESPONSE_t), 0, &xClient, sizeof( xClient ) );
+         // send the query response
+         FreeRTOS_sendto( xListeningSocket, pucTxRxBuffer, lengthOfbytes+sizeof(DNS_RESPONSE_t), 0, &xClient, sizeof( xClient ) );
       }
       else if( lengthOfbytes == 0 )
       {
          // No data was received, but FreeRTOS_recv() did not return an error. Timeout?
          etimeout++;
-         //FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );                                                        
-         //break;    
       }
       else if( lengthOfbytes == pdFREERTOS_ERRNO_ENOMEM )                                                                                        
       {                                                                                                                    
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                   
          enomem++;
-         //FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );                                                        
-         //break;
       } 
       else if( lengthOfbytes == pdFREERTOS_ERRNO_ENOTCONN )                                                                   
       {                                                                                                                       
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                      
          enotconn++;
-         //FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );                                                           
-         //break;
       } 
       else if( lengthOfbytes == pdFREERTOS_ERRNO_EINTR )                                                                      
       {                                                                                                                       
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                      
          eintr++;
-         //FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );                                                           
-         //break;
       } 
       else if( lengthOfbytes == pdFREERTOS_ERRNO_EINVAL )                                                                      
       {                                                                                                                       
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                      
          einval++;
-         //FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );                                                           
-         //break;
       } 
       else
       {                                                                                                                       
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                      
          eelse++;
-         //FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );                                                           
-         //break;
       } 
    }
-}
-
-// ----------------------------------------------------------------------------
-/// \brief     Parse dns query into length, labels, class and type.
-///
-/// \param     [in]  uint8_t *data
-/// \param     [in]  uint16_t length
-/// \param     [in]  DNS_QUERY_t *query
-///
-/// \return    0=error, 1=success
-static uint8_t dnsserver_parseQuery( uint8_t *data, uint16_t length, DNS_QUERY_t *query )
-{
-   uint8_t labelLength;
-   uint8_t labelNr = 0;
-   uint8_t nameLength = 0;
-   uint8_t *pointer = data;
-   
-   // data starts with the dns name
-   while(1)
-   {
-      // length ok?
-      if( nameLength > length )
-      {
-         return 0;
-      }
-
-      // check for next label
-      if( *pointer <= 63 && *pointer > 0 )
-      {
-         labelLength = *pointer;
-         pointer++;
-         nameLength++;
-         nameLength += labelLength;
-         query->labelnr++;
-      }
-      else if( *pointer == 0 )
-      {
-         // must be 0 terminator
-         nameLength--;
-         break;
-      }
-      else
-      {
-         // error
-         return 0;
-      }
-      
-      // copy
-      memcpy( query->name, pointer, labelLength );
-      
-      // rise the pointer
-      pointer += labelLength;
-   }
-   
-   // set namelength
-   query->length = nameLength;
-   
-   // set type
-   pointer++;
-   query->type = *((uint16_t*)pointer);
-   
-   // set class
-   pointer+=2;
-   query->dnsclass = *((uint16_t*)pointer);
-   
-   return 1;
 }
 /********************** (C) COPYRIGHT Reichle & De-Massari *****END OF FILE****/

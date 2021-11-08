@@ -1,18 +1,18 @@
 // ****************************************************************************
-/// \file      tcp.h
+/// \file      webserver
 ///
-/// \brief     TCP/IP Stack Application Level C Header File
+/// \brief     webserver header file
 ///
-/// \details   Module for the handling of the freertos tcp ip stack
+/// \details   Handles webserver requests from clients.
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
-/// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
-///
+/// \copyright Copyright 2021 Reichle & De-Massari AG
+///            
 ///            Permission is hereby granted, free of charge, to any person 
 ///            obtaining a copy of this software and associated documentation 
 ///            files (the "Software"), to deal in the Software without 
@@ -44,38 +44,21 @@
 ///
 // ****************************************************************************
 
-// Define to prevent recursive inclusion **************************************
-#ifndef __TCP_H
-#define __TCP_H
+/* Includes ------------------------------------------------------------------*/
+#include "stm32f4xx.h"
 
-// Include ********************************************************************
-#include "stm32f4xx_hal.h"
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __WEBSERVER_H
+#define __WEBSERVER_H
 
 // Exported defines ***********************************************************
-#define IP1             ( 192u )
-#define IP2             ( 168u )
-#define IP3             ( 2u )
-#define IP4             ( 1u )
-#define SUB1            ( 255u )
-#define SUB2            ( 255u )
-#define SUB3            ( 255u )
-#define SUB4            ( 0u )
-#define DHCPPOOLSIZE    ( 4u )
-
-#define RXBUFFEROFFSET (uint16_t)(44u) // +44 because of the rndis usb header siz
-#define HOSTNAME        "rndis"
-#define HOSTNAMECAP     "RNDIS"
-#define DEVICENAME      "rndis"
-#define DEVICENAMECAP   "RNDIS"
-#define HOSTNAMEDNS     "rndis.go"
-#define MAC_HWADDR      0xAD, 0xDE, 0x15, 0xEF, 0xBE, 0xDA 
 
 // Exported types *************************************************************
 
 // Exported functions *********************************************************
-void                    tcp_init                      ( void );
-void                    tcp_deinit                    ( void );
-uint8_t                 tcp_output                    ( uint8_t* buffer, uint16_t length );
-const char*             pcApplicationHostnameHookCAP  ( void );
-uint8_t                 tcp_enqueue                   ( uint8_t* data, uint16_t length );
-#endif // __TCP_H
+void httpserver_init    ( void );
+void httpserver_deinit  ( void );
+
+#endif /* __WEBSERVER_H*/
+
+/********************** (C) COPYRIGHT Reichle & De-Massari *****END OF FILE****/

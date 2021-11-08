@@ -642,7 +642,7 @@
                 <option>
                     <name>OOCOutputFormat</name>
                     <version>3</version>
-                    <state>3</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>OCOutputOverride</name>
@@ -650,7 +650,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>ITAT_RNDIS.bin</state>
+                    <state>ITAT_RNDIS.hex</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
@@ -1080,9 +1080,6 @@
                 <group>
                     <name>inc</name>
                     <file>
-                        <name>$PROJ_DIR$\..\Core\Inc\crc32.h</name>
-                    </file>
-                    <file>
                         <name>$PROJ_DIR$\..\Core\Inc\dhcpserver.h</name>
                     </file>
                     <file>
@@ -1093,6 +1090,9 @@
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\Core\Inc\FreeRTOSIPConfig.h</name>
+                    </file>
+                    <file>
+                        <name>$PROJ_DIR$\..\Core\Inc\httpserver.h</name>
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\Core\Inc\led.h</name>
@@ -1113,15 +1113,9 @@
                         <name>$PROJ_DIR$\..\Core\Inc\stm32f4xx_it.h</name>
                     </file>
                     <file>
-                        <name>$PROJ_DIR$\..\Core\Inc\tcp.h</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\Core\Inc\webserver.h</name>
+                        <name>$PROJ_DIR$\..\Core\Inc\tcpip.h</name>
                     </file>
                 </group>
-                <file>
-                    <name>$PROJ_DIR$\..\Core\Src\crc32.c</name>
-                </file>
                 <file>
                     <name>$PROJ_DIR$\..\Core\Src\dhcpserver.c</name>
                 </file>
@@ -1130,6 +1124,9 @@
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\Core\Src\freertos.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Core\Src\httpserver.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\Core\Src\led.c</name>
@@ -1153,10 +1150,7 @@
                     <name>$PROJ_DIR$\..\Core\Src\stm32f4xx_it.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\Core\Src\tcp.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Core\Src\webserver.c</name>
+                    <name>$PROJ_DIR$\..\Core\Src\tcpip.c</name>
                 </file>
             </group>
             <group>

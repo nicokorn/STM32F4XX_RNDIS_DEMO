@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\GitHub\STM32_HAL_RNDIS\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.general.xcl" --backend -f "D:\GitHub\STM32_HAL_RNDIS\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.general.xcl" --backend -f "D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\GitHub\STM32_HAL_RNDIS\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.general.xcl" "--debug_file=%~1" --backend -f "D:\GitHub\STM32_HAL_RNDIS\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.driver.xcl" 
+"C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.general.xcl" "--debug_file=%~1" --backend -f "D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.driver.xcl" 
 
 @echo off 
 :end

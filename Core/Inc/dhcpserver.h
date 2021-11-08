@@ -1,15 +1,15 @@
 // ****************************************************************************
 /// \file      dhcp server
 ///
-/// \brief     Dhcp server header file
+/// \brief     dhcp server header file
 ///
 /// \details   
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///

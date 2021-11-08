@@ -8,9 +8,9 @@
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///
@@ -99,7 +99,7 @@ void led_init( void ){
 }
 
 // ----------------------------------------------------------------------------
-/// \brief     Initialisation of the PWM.
+/// \brief     Initialisation of the "PWM".
 ///
 /// \param     none
 ///
@@ -277,13 +277,12 @@ static void ledTask( void *pvParameters )
          }
       }
 
-      // measure temperature all 10 seconds
       vTaskDelay(10);
    }
 }
 
 //-----------------------------------------------------------------------------
-/// \brief     Set led led into pulse mode
+/// \brief     Set led led into pulse mode.
 ///
 /// \param     none
 ///
@@ -294,7 +293,7 @@ void led_setPulse( void )
 }
 
 //-----------------------------------------------------------------------------
-/// \brief     Set led led into dim mode
+/// \brief     Set led led into dim mode.
 ///
 /// \param     none
 ///

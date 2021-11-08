@@ -1,15 +1,15 @@
 // ****************************************************************************
 /// \file      dhcpserver.c
 ///
-/// \brief     dhcp server module
+/// \brief     dhcp server c source file
 ///
 /// \details   Handles dhcp requests from clients.
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///
@@ -179,20 +179,19 @@ void dhcpserver_init( dhcpconf_t *dhcpconf_param )
 /// \return    none
 void dhcpserver_deinit( void )
 {
+   osThreadTerminate(&dhcpserverHandleTaskToNotify);
 }
 
 // ----------------------------------------------------------------------------
-/// \brief     Creates a task when if tcp frame arrives from a session and
-///            handles its content. 
-///            Handling GET or POST requests and parsing the uri's.
+/// \brief     The dhcp handle task listens on udp port 67 for incoming dhcp
+///            requests.
 ///
 /// \param     [in]  void *pvParameters
 ///
 /// \return    none
 static void dhcpserver_handle( void *pvParameters )
 {
-   uint8_t           *pucRxBuffer;
-   uint8_t           *pucTxBuffer;
+   uint8_t           *pucTxRxBuffer;
    BaseType_t        lengthOfbytes;
    static uint32_t   errorDisco;
    static uint32_t   errorReq;
@@ -210,33 +209,30 @@ static void dhcpserver_handle( void *pvParameters )
    struct freertos_sockaddr xDestinationAddress;
    
    // allocate heap for the transmit and receive message
-   pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXRXBUFFERSIZE );
-	pucRxBuffer = ( uint8_t * ) pvPortMalloc( TXRXBUFFERSIZE );
+	pucTxRxBuffer = ( uint8_t * ) pvPortMalloc( TXRXBUFFERSIZE );
    
-   if( pucTxBuffer == NULL || pucRxBuffer == NULL )
+   if( pucTxRxBuffer == NULL )
    {
       vTaskDelete( NULL );
    }
    
-   /* Attempt to open the socket. */
-   xListeningSocket = FreeRTOS_socket( FREERTOS_AF_INET,
-                                       FREERTOS_SOCK_DGRAM,/*FREERTOS_SOCK_DGRAM for UDP.*/
-                                       FREERTOS_IPPROTO_UDP );
+   // Attempt to open the socket.
+   xListeningSocket = FreeRTOS_socket( FREERTOS_AF_INET, FREERTOS_SOCK_DGRAM, FREERTOS_IPPROTO_UDP );
 
-   /* Check the socket was created. */
+   // Check the socket was created.
    configASSERT( xListeningSocket != FREERTOS_INVALID_SOCKET );
 
-   /* Bind to port 67. */
+   // Bind to port 67.
    xBindAddress.sin_port = FreeRTOS_htons( 67 );
    FreeRTOS_bind( xListeningSocket, &xBindAddress, sizeof( xBindAddress ) );
 
    for( ;; )
    {
-       /* Receive data from the socket.  ulFlags is zero, so the standard
-       interface is used.  By default the block time is portMAX_DELAY, but it
-       can be changed using FreeRTOS_setsockopt(). */
+       // Receive data from the socket.  ulFlags is zero, so the standard
+       // interface is used.  By default the block time is portMAX_DELAY, but it
+       // can be changed using FreeRTOS_setsockopt().
        lengthOfbytes = FreeRTOS_recvfrom( xListeningSocket,
-                                   pucRxBuffer,
+                                   pucTxRxBuffer,
                                    TXRXBUFFERSIZE,
                                    0,
                                    &xClient,
@@ -254,7 +250,7 @@ static void dhcpserver_handle( void *pvParameters )
          leasetableObj_t *leaseObj;
          
          // process dhcp frames
-         dhcpMsg = (DHCP_MSG_t*)pucRxBuffer;
+         dhcpMsg = (DHCP_MSG_t*)pucTxRxBuffer;
          
          switch ( dhcpMsg->options[2] )
          {
@@ -288,10 +284,10 @@ static void dhcpserver_handle( void *pvParameters )
                   *(uint32_t*)dhcpconf->dns, leaseObj->leasetime, *(uint32_t*)dhcpconf->dhcpip,
                   *(uint32_t*)dhcpconf->dhcpip, *(uint32_t*)dhcpconf->sub );
                
-               memcpy( pucTxBuffer, dhcpMsg, sizeof(DHCP_MSG_t));
+               memcpy( pucTxRxBuffer, dhcpMsg, sizeof(DHCP_MSG_t));
                xDestinationAddress.sin_addr = FreeRTOS_inet_addr_quick( 255, 255, 255, 255 );
                xDestinationAddress.sin_port = FreeRTOS_htons( 68 );
-               FreeRTOS_sendto( xListeningSocket, pucTxBuffer, sizeof(DHCP_MSG_t), 0, &xDestinationAddress, sizeof( xDestinationAddress ) );
+               FreeRTOS_sendto( xListeningSocket, pucTxRxBuffer, sizeof(DHCP_MSG_t), 0, &xDestinationAddress, sizeof( xDestinationAddress ) );
                break;
       
             case DHCP_REQUEST:
@@ -348,10 +344,10 @@ static void dhcpserver_handle( void *pvParameters )
                   *(uint32_t*)dhcpconf->dhcpip, *(uint32_t*)dhcpconf->sub );
                
                // send acknowledge
-               memcpy( pucTxBuffer, dhcpMsg, sizeof(DHCP_MSG_t));
+               memcpy( pucTxRxBuffer, dhcpMsg, sizeof(DHCP_MSG_t));
                xDestinationAddress.sin_addr = FreeRTOS_inet_addr_quick( 255, 255, 255, 255 );
                xDestinationAddress.sin_port = FreeRTOS_htons( 68 );
-               FreeRTOS_sendto( xListeningSocket, pucTxBuffer, sizeof(DHCP_MSG_t), 0, &xDestinationAddress, sizeof( xDestinationAddress ) );
+               FreeRTOS_sendto( xListeningSocket, pucTxRxBuffer, sizeof(DHCP_MSG_t), 0, &xDestinationAddress, sizeof( xDestinationAddress ) );
                break;
       
             default:
@@ -392,7 +388,7 @@ static void dhcpserver_handle( void *pvParameters )
 }
 
 // ----------------------------------------------------------------------------
-/// \brief     Search for ip address and return dhcp table object
+/// \brief     Search for ip address and return dhcp table object.
 ///
 /// \param     [in]  uint32_t ip
 ///
@@ -415,7 +411,7 @@ static leasetableObj_t *dhcpserver_lookupIp( uint32_t ip )
 }
 
 // ----------------------------------------------------------------------------
-/// \brief     Search for mac address and return dhcp table object
+/// \brief     Search for mac address and return dhcp table object.
 ///
 /// \param     [in]  uint8_t *mac
 ///
@@ -540,7 +536,7 @@ static uint8_t dhcpserver_lookupFreeObj( leasetableObj_t* tableObj )
 }
 
 // ----------------------------------------------------------------------------
-/// \brief     Fill out dhcp message option fields
+/// \brief     Fill out dhcp message option fields.
 ///
 /// \param     [in]  void *dest
 /// \param     [in]  uint8_t msg_type
@@ -552,8 +548,7 @@ static uint8_t dhcpserver_lookupFreeObj( leasetableObj_t* tableObj )
 /// \param     [in]  uint32_t subnet
 ///
 /// \return    0 = error, 1 = free, 2 = not free
-static void dhcpserver_fillOptions( void *dest, uint8_t msg_type, const char *domain, uint32_t dns,
-	uint32_t lease_time, uint32_t serverid, uint32_t router, uint32_t subnet )
+static void dhcpserver_fillOptions( void *dest, uint8_t msg_type, const char *domain, uint32_t dns, uint32_t lease_time, uint32_t serverid, uint32_t router, uint32_t subnet )
 {
 	uint8_t *ptr = (uint8_t *)dest;
 	/* ACK message type */
@@ -611,7 +606,6 @@ static void dhcpserver_fillOptions( void *dest, uint8_t msg_type, const char *do
 
 	/* end */
 	*ptr++ = DHCP_END;
-	//return ptr - (uint8_t *)dest;
 }
 
 // ----------------------------------------------------------------------------

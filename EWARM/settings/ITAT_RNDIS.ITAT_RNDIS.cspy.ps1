@@ -23,9 +23,9 @@
 
 if ($debugfile -eq "")
 {
-& "C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\GitHub\STM32_HAL_RNDIS\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.general.xcl" --backend -f "D:\GitHub\STM32_HAL_RNDIS\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.driver.xcl" 
+& "C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.general.xcl" --backend -f "D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.driver.xcl" 
 }
 else
 {
-& "C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\GitHub\STM32_HAL_RNDIS\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.general.xcl" --debug_file=$debugfile --backend -f "D:\GitHub\STM32_HAL_RNDIS\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.driver.xcl" 
+& "C:\Program Files\IAR Systems\Embedded Workbench 9.0\common\bin\cspybat" -f "D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.general.xcl" --debug_file=$debugfile --backend -f "D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\settings\ITAT_RNDIS.ITAT_RNDIS.driver.xcl" 
 }

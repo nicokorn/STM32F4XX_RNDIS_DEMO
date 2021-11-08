@@ -1,15 +1,15 @@
 // ****************************************************************************
 /// \file      webserver.c
 ///
-/// \brief     web server module
+/// \brief     web server c file
 ///
 /// \details   Handles webserver requests from clients.
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///
@@ -47,7 +47,7 @@
 // Include ********************************************************************
 #include  <string.h>
 #include  <stdlib.h>
-#include "webserver.h"
+#include "httpserver.h"
 #include "led.h"
 #include "monitor.h"
 #include "printf.h"
@@ -63,8 +63,6 @@
 // Private defines ************************************************************
 #define URIBUFFER       ( 500u )
 #define TXBUFFERSIZE    ( 4000u )
-
-#define RMLOGO          "<img src='data:image/png;base64,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'/>"
 #define FAVICON         "<link rel=\"shortcut icon\" href=\"data:image/gif;base64,R0lGODlhIAAgAHAAACwAAAAAIAAgAIf////s2+Pqt8j/wNT/v836wsv/xM7/wM7/w9L6ws38uMP4ZHTQCyfgAB7cABnXBhzeBh7bABjiAR/iAB3UAC3wdYfZAwvdAybkAyHqBivjABrgAyblASbiASHjAiLkACXwZ4XkABHsBDTgBCjVASnfASbgBS3eACnhACjiASnXBR7tfpHdAxHpAC3sAifiACXtACXiACbfACXjASfjABnmY3XbBgrYAB7qAB3tAB3tABrgAB3iAB7hAB7ZCCX31+z7vbLjycztw8T0v8fxw8Puysr3vsf1wMj/s6/6v93+m57oo7Xxnaz/nrX3m6rworD9mbH5nLH6nbL1pKPhaXLbBQPfABvhABDrAx3pABDeABDjABbfABXgARbdASXgfY/iABD9AjfcACLTByjoByfgAiffAyfkABvya4ngABDvAzPUAyLfASjjAiTlACndASfeACXkARzleIvZBRHqACvhACLoACjeASDnASjdBCHpaH7gDhfkAyvkBSLqACfeBSDgBybnBSrkBCbjACn67//3x7vz2N354Nz/0+D62t310tj72dr62Nn9zcH4rc7zgobqjKTskJ/6gaDvjqLsiKDwip/viZ7lhYnuanjjDhDjACDhABfmABjdARrnAh/hABniABruAS/ddILTBAzqACjiBiLsCC3hASPkAyPlBCTYAh72b4/iABXwBDXUAyPeACvlACvdACvdACbeACfgAinhBR7vdXLVABnnABvSARflBSDdBB/mAB/vaHnmEz70FULfFzvsFD3lFD7pCzrnEDrVFDMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI/wABCBxIsKDBgwgTKlzIsKHDhxAjPvwhABEBAgYIWDTAsWPGhwEcXeR4caQAjCcVPKyRS4uWllrEuJQpE4aWNQ8rxBSjRowYGD6BAv0p5iEILT19xopFtKnPh5a0wOgJYyhPnz3VaFlZZU2WqkFpii3q8IeCIEWKFCoiwMDJIigJAHmYRMkTJk2gPIHCly9evlMeUqniMksWwi4TJybbUJSWMGLWXFUqhinTrQ6PqlkTayhTykEfOhaK9SfVqU8zZ2I6VM1Qq0AhFklEKFGiQwFu07Ztm9FDRxUsWZIECZJw4Y+OW7L1sBfiLC5tztQCHanoUVl9EgUrNJdRpKU/Ky5dyvShLTFZcml/7TPLT8wNexX7JezXfDXFiOknZp9YMYkABijggAQWaOCBAAQEADs=\" />"
 
 // Private types     **********************************************************
@@ -89,7 +87,7 @@ static TickType_t xSendTimeOut            = pdMS_TO_TICKS( 4000 );
 static BaseType_t xTrueValue              = 1;
 static uint32_t   guestCounter;
 
-// the webpage top header with rm logo
+// the webpage top header
 static const char *webpage_top = {
    "HTTP/1.1 200 OK\r\n"
    "Content-Type: text/html\r\n\r\n" //"Content-Type: text/html; charset=utf-8\r\n"
@@ -104,7 +102,7 @@ static const char *webpage_top = {
    "</style>"
       
    FAVICON
-   "<title>RNDIS Webserver Example</title>"
+   "<title>RNDIS HTTP Server Example</title>"
    "<style> div.main {"
    "font-family: Arial;"
    "padding: 0.01em 30px;"
@@ -115,7 +113,7 @@ static const char *webpage_top = {
    "<body><div class='main'>"
    // Top header bar ////////////////////////////////////////////////////////
    "<p><div id='box1' style='height:55;'>"
-   "<font size='20' font color='white'><b>RNDIS Webserver Example</b></font>"
+   "<font size='20' font color='white'><b>RNDIS HTTP Server Example</b></font>"
    "</div></p>"
    //////////////////////////////////////////////////////////////////////////
    "<br />"
@@ -130,18 +128,18 @@ static const char *webpage_bottom_no_btn = {
 // Global variables ***********************************************************
 
 // Private function prototypes ************************************************
-static void       webserver_listen        ( void *pvParameters );
-static void       webserver_handle        ( void *pvParameters );
-static void       webserver_homepage      ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static uint16_t   webserver_favicon       ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       webserver_205           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       webserver_204           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       webserver_204Refresh    ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       webserver_201           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       webserver_200           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       webserver_301           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       webserver_400           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       webserver_lastPacket    ( Socket_t xConnectedSocket );
+static void       httpserver_listen        ( void *pvParameters );
+static void       httpserver_handle        ( void *pvParameters );
+static void       httpserver_homepage      ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static uint16_t   httpserver_favicon       ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_205           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_204           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_204Refresh    ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_201           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_200           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_301           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_400           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_lastPacket    ( Socket_t xConnectedSocket );
 
 // Functions ******************************************************************
 
@@ -151,10 +149,10 @@ static void       webserver_lastPacket    ( Socket_t xConnectedSocket );
 /// \param     none
 ///
 /// \return    none
-void webserver_init( void )
+void httpserver_init( void )
 {
    // initialise webserver task
-   webserverListenTaskToNotify = osThreadNew( webserver_listen, NULL, &webserverListenTask_attributes );
+   webserverListenTaskToNotify = osThreadNew( httpserver_listen, NULL, &webserverListenTask_attributes );
 }
 
 //------------------------------------------------------------------------------
@@ -163,8 +161,9 @@ void webserver_init( void )
 /// \param     none
 ///
 /// \return    none
-void webserver_deinit( void )
+void httpserver_deinit( void )
 {
+   osThreadTerminate(&webserverListenTaskToNotify);
 }
 
 // ----------------------------------------------------------------------------
@@ -173,7 +172,7 @@ void webserver_deinit( void )
 /// \param     [in]  void *pvParameters
 ///
 /// \return    none
-static void webserver_listen( void *pvParameters )
+static void httpserver_listen( void *pvParameters )
 {
    struct freertos_sockaddr   xClient, xBindAddress;
    Socket_t                   xListeningSocket, xConnectedSocket;
@@ -208,19 +207,17 @@ static void webserver_listen( void *pvParameters )
       configASSERT( xConnectedSocket != FREERTOS_INVALID_SOCKET );
 
       // Spawn a RTOS task to handle the connection.
-      webserverHandleTaskToNotify = osThreadNew( webserver_handle, (void*)xConnectedSocket, &webserverHandleTask_attributes );
+      webserverHandleTaskToNotify = osThreadNew( httpserver_handle, (void*)xConnectedSocket, &webserverHandleTask_attributes );
    }
 }
 
 // ----------------------------------------------------------------------------
-/// \brief     Creates a task when if tcp frame arrives from a session and
-///            handles its content. 
-///            Handling GET or POST requests and parsing the uri's.
+/// \brief     Handles REST API GET and POST request to the http server.
 ///
 /// \param     [in]  void *pvParameters
 ///
 /// \return    none
-static void webserver_handle( void *pvParameters )
+static void httpserver_handle( void *pvParameters )
 {
    Socket_t          xConnectedSocket;
    uint8_t           uri[URIBUFFER];
@@ -248,7 +245,7 @@ static void webserver_handle( void *pvParameters )
    if( pageBuffer == NULL )
    {
       memset(uri,0x00,URIBUFFER);
-      webserver_400(uri, TXBUFFERSIZE, xConnectedSocket);
+      httpserver_400(uri, TXBUFFERSIZE, xConnectedSocket);
       memset(uri,0x00,URIBUFFER);
       FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );    
       xTimeOnShutdown = xTaskGetTickCount();
@@ -273,7 +270,7 @@ static void webserver_handle( void *pvParameters )
    {
       vPortFree( pageBuffer );
       memset(uri,0x00,URIBUFFER);
-      webserver_400(uri, TXBUFFERSIZE, xConnectedSocket);
+      httpserver_400(uri, TXBUFFERSIZE, xConnectedSocket);
       memset(uri,0x00,URIBUFFER);
       FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );    
       xTimeOnShutdown = xTaskGetTickCount();
@@ -291,9 +288,6 @@ static void webserver_handle( void *pvParameters )
       return;
    }
 
-   //FreeRTOS_setsockopt( xConnectedSocket, 0, FREERTOS_SO_RCVTIMEO, &xReceiveTimeOut, sizeof( xReceiveTimeOut ) );
-	//FreeRTOS_setsockopt( xConnectedSocket, 0, FREERTOS_SO_SNDTIMEO, &xSendTimeOut, sizeof( xSendTimeOut ) );
-
    for( ;; )
    {
       // Receive data on the socket.
@@ -307,7 +301,7 @@ static void webserver_handle( void *pvParameters )
       //                                   lengthOfbytes = pdFREERTOS_ERRNO_EINVAL     --> socket is not valid
       if( lengthOfbytes > 0 )
       {         
-         /* check for a GET request */
+         // check for a GET request
          if (!strncmp((char const*)pucRxBuffer, "GET ", 4))
          {
             // extract URI
@@ -329,7 +323,7 @@ static void webserver_handle( void *pvParameters )
             if(memcmp((char const*)uri, "/home", 5u) == 0)
             {
                // mainpage
-               webserver_homepage( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               httpserver_homepage( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
                
                // listen to the socket again
                continue;
@@ -337,15 +331,16 @@ static void webserver_handle( void *pvParameters )
             else
             {
                // send 400
-               webserver_homepage( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               httpserver_homepage( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
                
                // listen to the socket again
                continue;
             }
          }
          
-         /* check for a POST request */
-         if (!strncmp((char const*)pucRxBuffer, "POST ", 5u)) {
+         // check for a POST request
+         if (!strncmp((char const*)pucRxBuffer, "POST ", 5u))
+         {
             
             // extract URI
             sp1 = pucRxBuffer + 5;
@@ -368,7 +363,7 @@ static void webserver_handle( void *pvParameters )
                // toggle led
                led_toggle();
                
-               webserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
+               httpserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
 
                // listen to the socket again
                continue; 
@@ -391,7 +386,7 @@ static void webserver_handle( void *pvParameters )
                }
                
                // send ok rest api
-               webserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
+               httpserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
 
                // listen to the socket again
                continue; 
@@ -402,7 +397,7 @@ static void webserver_handle( void *pvParameters )
                led_setPulse();
                
                // send ok rest api
-               webserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
+               httpserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
 
                // listen to the socket again
                continue; 
@@ -410,7 +405,7 @@ static void webserver_handle( void *pvParameters )
             else
             {
                // send bad request if the uri is faulty
-               webserver_400(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
+               httpserver_400(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
                
                // listen to the socket again
                continue; 
@@ -486,7 +481,7 @@ static void webserver_handle( void *pvParameters )
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    none
-static void webserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+static void httpserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    uint16_t 		   stringLength;
    uint32_t 		   totalSeconds;
@@ -512,8 +507,10 @@ static void webserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, So
    static const char *webpage_panelcontrollerMonitor = {
       
       "<style type='text/css'>"
+         
       // header text
       "#box1 {background-color: orange; background-image: linear-gradient(red, black);}"
+         
       // slider
       ".slidecontainer {width: 100%;}"
       ".slider {-webkit-appearance: none;width: 250px;height: 15px;border-radius: 5px;background: #d3d3d3;outline: none;opacity: 0.7;-webkit-transition: .2s;transition: opacity .2s;}"
@@ -550,6 +547,7 @@ static void webserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, So
          
       "function unblock(){block=0;}"
       
+      // block next post request triggert by the slider for 250 ms to avoid "spamming"
       "slider.oninput=function(){"
          "if(block==0){"
             "block=1;"
@@ -557,7 +555,7 @@ static void webserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, So
             "xhr.open('POST', urlpost, true);"
             "xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');"
             "xhr.send('zero');"
-            "setTimeout(unblock, 250);"
+            "setTimeout(unblock, 150);"
          "}"
       "}"
       "</script>"
@@ -655,7 +653,7 @@ static void webserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, So
    // send fragment of the webpage//////////////////////////////////////////////
    if( stringLength < pageBufferSize )
    {
-      webserver_lastPacket( xConnectedSocket );
+      httpserver_lastPacket( xConnectedSocket );
       FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
    }
    vPortFree(task);
@@ -670,7 +668,7 @@ static void webserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, So
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    stringLength
-static uint16_t webserver_favicon( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+static uint16_t httpserver_favicon( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    // general page variables
    uint16_t stringLength;
@@ -691,7 +689,7 @@ static uint16_t webserver_favicon( uint8_t* pageBuffer, uint16_t pageBufferSize,
    // send fragment of the webpage
    if( stringLength < pageBufferSize )
    {
-      webserver_lastPacket( xConnectedSocket );
+      httpserver_lastPacket( xConnectedSocket );
       FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
    }
    return stringLength;
@@ -705,7 +703,7 @@ static uint16_t webserver_favicon( uint8_t* pageBuffer, uint16_t pageBufferSize,
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    none
-static void webserver_200( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+static void httpserver_200( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    // general page variables
    uint16_t stringLength;
@@ -721,7 +719,7 @@ static void webserver_200( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
    // send fragment of the webpage
    if( stringLength < pageBufferSize )
    {
-      webserver_lastPacket( xConnectedSocket );
+      httpserver_lastPacket( xConnectedSocket );
       FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
    }
 }
@@ -734,7 +732,7 @@ static void webserver_200( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    none
-static void webserver_204( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+static void httpserver_204( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    // general page variables
    uint16_t stringLength;
@@ -750,7 +748,7 @@ static void webserver_204( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
    // send fragment of the webpage
    if( stringLength < pageBufferSize )
    {
-      webserver_lastPacket( xConnectedSocket );
+      httpserver_lastPacket( xConnectedSocket );
       FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
    }
 }
@@ -763,7 +761,7 @@ static void webserver_204( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    none
-static void webserver_205( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+static void httpserver_205( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    // general page variables
    uint16_t stringLength;
@@ -779,7 +777,7 @@ static void webserver_205( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
    // send fragment of the webpage
    if( stringLength < pageBufferSize )
    {
-      webserver_lastPacket( xConnectedSocket );
+      httpserver_lastPacket( xConnectedSocket );
       FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
    }
 }
@@ -792,7 +790,7 @@ static void webserver_205( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    none
-static void webserver_201( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+static void httpserver_201( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    // general page variables
    uint16_t stringLength;
@@ -810,7 +808,7 @@ static void webserver_201( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
    // send fragment of the webpage
    if( stringLength < pageBufferSize )
    {
-      webserver_lastPacket( xConnectedSocket );
+      httpserver_lastPacket( xConnectedSocket );
       FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
    }
 }
@@ -823,7 +821,7 @@ static void webserver_201( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    none
-static void webserver_400( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+static void httpserver_400( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    // general page variables
    uint16_t stringLength;
@@ -839,7 +837,7 @@ static void webserver_400( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
    // send fragment of the webpage
    if( stringLength < pageBufferSize )
    {
-      webserver_lastPacket( xConnectedSocket );
+      httpserver_lastPacket( xConnectedSocket );
       FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
    }
 }
@@ -852,7 +850,7 @@ static void webserver_400( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    none
-static void webserver_301( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+static void httpserver_301( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    // general page variables
    uint16_t stringLength;
@@ -869,18 +867,18 @@ static void webserver_301( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_
    // send fragment of the webpage
    if( stringLength < pageBufferSize )
    {
-      webserver_lastPacket( xConnectedSocket );
+      httpserver_lastPacket( xConnectedSocket );
       FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
    }
 }
 
 // ----------------------------------------------------------------------------
-/// \brief     Last packet sets fin option on socket
+/// \brief     Last packet sets fin option on socket.
 ///
 /// \param     none
 ///
 /// \return    none
-static void webserver_lastPacket( Socket_t xConnectedSocket )
+static void httpserver_lastPacket( Socket_t xConnectedSocket )
 {
    xTrueValue = 1;
    FreeRTOS_setsockopt( xConnectedSocket, 0, FREERTOS_SO_CLOSE_AFTER_SEND, ( void * ) &xTrueValue, sizeof( xTrueValue ) );

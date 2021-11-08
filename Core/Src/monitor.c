@@ -1,16 +1,16 @@
 // ****************************************************************************
 /// \file      monitor.c
 ///
-/// \brief     Monitor C Source File
+/// \brief     monitor c source file
 ///
 /// \details   This module contents actions to show the physical status of the
 ///			   board like temperature and input voltage.
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright 2021 Reichle & De-Massari AG
 ///            
@@ -74,7 +74,7 @@ ADC_HandleTypeDef ADC_Handle;
 ADC_HandleTypeDef ADC_VOLT_Handle;
 
 // Private function prototypes ************************************************
-static void    statusMonitorTask( void *pvParameters );
+static void statusMonitorTask( void *pvParameters );
 
 // Functions ******************************************************************
 // ----------------------------------------------------------------------------
@@ -94,18 +94,18 @@ void monitor_init( void )
    __HAL_RCC_ADC1_CLK_ENABLE();
 
    //ADC init
-   ADC_Handle.Instance = ADC1;
-   ADC_Handle.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-   ADC_Handle.Init.Resolution = ADC_RESOLUTION_12B;
-   ADC_Handle.Init.ScanConvMode = DISABLE;
-   ADC_Handle.Init.ContinuousConvMode = DISABLE;
-   ADC_Handle.Init.DiscontinuousConvMode = DISABLE;
-   ADC_Handle.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-   ADC_Handle.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-   ADC_Handle.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-   ADC_Handle.Init.NbrOfConversion = 1;
-   ADC_Handle.Init.DMAContinuousRequests = DISABLE;
-   ADC_Handle.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+   ADC_Handle.Instance                    = ADC1;
+   ADC_Handle.Init.ClockPrescaler         = ADC_CLOCK_SYNC_PCLK_DIV4;
+   ADC_Handle.Init.Resolution             = ADC_RESOLUTION_12B;
+   ADC_Handle.Init.ScanConvMode           = DISABLE;
+   ADC_Handle.Init.ContinuousConvMode     = DISABLE;
+   ADC_Handle.Init.DiscontinuousConvMode  = DISABLE;
+   ADC_Handle.Init.ExternalTrigConvEdge   = ADC_EXTERNALTRIGCONVEDGE_NONE;
+   ADC_Handle.Init.ExternalTrigConv       = ADC_SOFTWARE_START;
+   ADC_Handle.Init.DataAlign              = ADC_DATAALIGN_RIGHT;
+   ADC_Handle.Init.NbrOfConversion        = 1;
+   ADC_Handle.Init.DMAContinuousRequests  = DISABLE;
+   ADC_Handle.Init.EOCSelection           = ADC_EOC_SINGLE_CONV;
    if (HAL_ADC_Init(&ADC_Handle) != HAL_OK)
    {
       return;
@@ -165,8 +165,8 @@ static void statusMonitorTask( void *pvParameters )
       }
 
       // Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
-      sConfig.Channel = ADC_CHANNEL_VREFINT;
-      sConfig.Rank = 1;
+      sConfig.Channel      = ADC_CHANNEL_VREFINT;
+      sConfig.Rank         = 1;
       sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
       if (HAL_ADC_ConfigChannel(&ADC_Handle, &sConfig) != HAL_OK)
       {
@@ -200,7 +200,7 @@ float monitor_getTemperature( void )
 }
 
 //-----------------------------------------------------------------------------
-/// \brief     Returns internal stm32l431 temperature from last measurement
+/// \brief     Returns internal stm32l431 temperature from last measurement.
 ///
 /// \param     none
 ///

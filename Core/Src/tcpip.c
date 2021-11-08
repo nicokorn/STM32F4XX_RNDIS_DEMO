@@ -7,9 +7,9 @@
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///
@@ -48,8 +48,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include "tcp.h"
-#include "webserver.h"
+#include "tcpip.h"
+#include "httpserver.h"
 #include "dhcpserver.h"
 #include "dnsserver.h"
 #include "queuex.h"
@@ -94,7 +94,7 @@ static FlagStatus       processingIdle = SET;
 static FRAME_t          currentFrame;
 extern queue_handle_t   tcpQueue;
 extern queue_handle_t   usbQueue;
-static leasetableObj_t leasetable[DHCPPOOLSIZE] =
+static leasetableObj_t  leasetable[DHCPPOOLSIZE] =
 {
     /* mac    ip address        subnet mask        lease time */
     { {0}, {IP1, IP2, IP3, 2}, {SUB1, SUB2, SUB3, SUB4}, 24 * 60 * 60 },
@@ -112,7 +112,7 @@ static dhcpconf_t dhcpconf =
     leasetable                   // pointer to lease table
 };
 
-osThreadId_t tcp_macTaskToNotify;
+osThreadId_t tcpip_macTaskToNotify;
 const osThreadAttr_t macReceiveTask_attributes = {
   .name = "MAC-task",
   .stack_size = configMINIMAL_STACK_SIZE * 4,
@@ -120,11 +120,11 @@ const osThreadAttr_t macReceiveTask_attributes = {
 };
 
 // Private function prototypes ************************************************
-static void       tcp_rngInit             ( void );
-static void       tcp_rngDeInit           ( void );
-static uint32_t   tcp_getRandomNumber     ( void );
-static void       tcp_macTask             ( void *pvParameters );
-static void       tcp_invokeMacTask       ( void );
+static void       tcpip_rngInit             ( void );
+static void       tcpip_rngDeInit           ( void );
+static uint32_t   tcpip_getRandomNumber     ( void );
+static void       tcpip_macTask             ( void *pvParameters );
+static void       tcpip_invokeMacTask       ( void );
 
 // Functions ******************************************************************
 // ----------------------------------------------------------------------------
@@ -133,16 +133,16 @@ static void       tcp_invokeMacTask       ( void );
 /// \param     none
 ///
 /// \return    none
-void tcp_init( void )
+void tcpip_init( void )
 {   
    // init random number generator
-   tcp_rngInit();
+   tcpip_rngInit();
    
    // initialise the TCP/IP stack.
    FreeRTOS_IPInit( ucIPAddressFLASH, ucNetMaskFLASH, ucGatewayAddressFLASH, ucDNSServerAddressFLASH, ucMACAddressFLASH );  
    
    // initialise receive complete task
-   tcp_macTaskToNotify = osThreadNew( tcp_macTask, NULL, &macReceiveTask_attributes );
+   tcpip_macTaskToNotify = osThreadNew( tcpip_macTask, NULL, &macReceiveTask_attributes );
 }
 
 // ----------------------------------------------------------------------------
@@ -151,16 +151,13 @@ void tcp_init( void )
 /// \param     none
 ///
 /// \return    none
-void tcp_deinit( void )
+void tcpip_deinit( void )
 {
-   // delete all running ip tasks
-   osThreadTerminate(&tcp_macTaskToNotify);
-   webserver_deinit();
+   osThreadTerminate(&tcpip_macTaskToNotify);
+   httpserver_deinit();
    dhcpserver_deinit();
    dnsserver_deinit();
-   tcp_rngDeInit();
-   //osThreadTerminate(&serverTask);
-  // xDeleteIPTask();
+   tcpip_rngDeInit();
 }
 
 //-----------------------------------------------------------------------------
@@ -183,7 +180,7 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent )
 		if( xTasksAlreadyCreated == pdFALSE )
 		{
          // start webserver
-         webserver_init();
+         httpserver_init();
          
          // start dhcp server
          dhcpserver_init(&dhcpconf);
@@ -205,7 +202,7 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent )
 /// \return    UBaseType_t random number
 UBaseType_t uxRand( void )
 {
-	return tcp_getRandomNumber();
+	return tcpip_getRandomNumber();
 }
 
 //-----------------------------------------------------------------------------
@@ -216,7 +213,7 @@ UBaseType_t uxRand( void )
 /// \return    UBaseType_t random number
 extern BaseType_t xApplicationGetRandomNumber( uint32_t * pulNumber )
 {
-   *pulNumber = tcp_getRandomNumber();
+   *pulNumber = tcpip_getRandomNumber();
    return pdTRUE;
 }
 
@@ -360,7 +357,7 @@ BaseType_t xApplicationDNSQueryHook( const char *pcName )
 /// \param     [in] uint16_t length
 ///
 /// \return    0 = not send, 1 = send
-uint8_t tcp_output( uint8_t* buffer, uint16_t length )
+uint8_t tcpip_output( uint8_t* buffer, uint16_t length )
 {
    if( buffer == NULL || length == 0 )
    {
@@ -374,7 +371,7 @@ uint8_t tcp_output( uint8_t* buffer, uint16_t length )
       currentFrame.data = buffer;
       currentFrame.length = length;
       processingIdle = RESET;
-      tcp_invokeMacTask();
+      tcpip_invokeMacTask();
       return 1;
    }
    
@@ -388,7 +385,7 @@ uint8_t tcp_output( uint8_t* buffer, uint16_t length )
 /// \param     [in]  void *pvParameters
 ///
 /// \return    none
-static void tcp_macTask( void *pvParameters )
+static void tcpip_macTask( void *pvParameters )
 {
    // current step get pointer and length of frame!
    NetworkBufferDescriptor_t  *pxBufferDescriptor;
@@ -485,12 +482,12 @@ static void tcp_macTask( void *pvParameters )
 /// \param     none
 ///
 /// \return    none
-static void tcp_invokeMacTask( void )
+static void tcpip_invokeMacTask( void )
 {
-   if( tcp_macTaskToNotify != NULL )
+   if( tcpip_macTaskToNotify != NULL )
    {
       // Notify to start the emac task to process the next frame from fifo
-      xTaskNotifyGive( tcp_macTaskToNotify );
+      xTaskNotifyGive( tcpip_macTaskToNotify );
    }
 }
 
@@ -548,7 +545,7 @@ void vApplicationPingReplyHook( ePingReplyStatus_t eStatus, uint16_t usIdentifie
 /// \param     none
 ///
 /// \return    none
-static void tcp_rngInit( void )
+static void tcpip_rngInit( void )
 {
    srand(  (uint32_t)((const uint32_t *)0x48CD)  );
 }
@@ -559,7 +556,7 @@ static void tcp_rngInit( void )
 /// \param     none
 ///
 /// \return    none
-static void tcp_rngDeInit( void )
+static void tcpip_rngDeInit( void )
 {
    
 }
@@ -570,7 +567,7 @@ static void tcp_rngDeInit( void )
 /// \param     none
 ///
 /// \return    uint32_t random number
-static uint32_t tcp_getRandomNumber( void )
+static uint32_t tcpip_getRandomNumber( void )
 {
    return rand()%0xffffffff;
 }
@@ -582,7 +579,7 @@ static uint32_t tcp_getRandomNumber( void )
 /// \param     none
 ///
 /// \return    0 = queue is full, 1 = frame queued
-uint8_t tcp_enqueue( uint8_t* data, uint16_t length )
+uint8_t tcpip_enqueue( uint8_t* data, uint16_t length )
 {
    if( queue_isFull( &tcpQueue ) != 1 )
    {

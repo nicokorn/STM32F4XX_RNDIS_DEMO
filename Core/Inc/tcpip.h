@@ -1,16 +1,15 @@
 // ****************************************************************************
-/// \file      crc32.h
+/// \file      tcp.h
 ///
-/// \brief     crc module
+/// \brief     TCP/IP Stack Application Level C Header File
 ///
-/// \details   Needded if CRC32 shall be calculated if length%4!=0 and the
-///            hardware crc32 cannot handle such cases.
+/// \details   Module for the handling of the freertos tcp ip stack
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///
@@ -45,22 +44,38 @@
 ///
 // ****************************************************************************
 
-/* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx.h"
+// Define to prevent recursive inclusion **************************************
+#ifndef __TCP_H
+#define __TCP_H
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __CRC32_H
-#define __CRC32_H
+// Include ********************************************************************
+#include "stm32f4xx_hal.h"
 
 // Exported defines ***********************************************************
+#define IP1             ( 192u )
+#define IP2             ( 168u )
+#define IP3             ( 2u )
+#define IP4             ( 1u )
+#define SUB1            ( 255u )
+#define SUB2            ( 255u )
+#define SUB3            ( 255u )
+#define SUB4            ( 0u )
+#define DHCPPOOLSIZE    ( 4u )
+
+#define RXBUFFEROFFSET (uint16_t)(44u) // +44 because of the rndis usb header siz
+#define HOSTNAME        "rndis"
+#define HOSTNAMECAP     "RNDIS"
+#define DEVICENAME      "rndis"
+#define DEVICENAMECAP   "RNDIS"
+#define HOSTNAMEDNS     "rndis.go"
+#define MAC_HWADDR      0xAD, 0xDE, 0x15, 0xEF, 0xBE, 0xDA 
 
 // Exported types *************************************************************
 
 // Exported functions *********************************************************
-void        crc32_init        ( void );
-void        crc32_deinit      ( void );
-uint32_t    crc32_calculate   (CRC_HandleTypeDef *hcrc, uint32_t pBuffer[], uint32_t BufferLength);
-
-#endif /* __CRC32_H */
-
-/********************** (C) COPYRIGHT Reichle & De-Massari *****END OF FILE****/
+void                    tcpip_init                    ( void );
+void                    tcpip_deinit                  ( void );
+uint8_t                 tcpip_output                  ( uint8_t* buffer, uint16_t length );
+const char*             pcApplicationHostnameHookCAP  ( void );
+uint8_t                 tcpip_enqueue                 ( uint8_t* data, uint16_t length );
+#endif // __TCP_H

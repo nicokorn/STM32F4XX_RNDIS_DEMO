@@ -7,9 +7,9 @@
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.0
+/// \version   0.3.0.1
 ///
-/// \date      07112021
+/// \date      08112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///            
@@ -50,7 +50,7 @@
 #include "usb_device.h"
 #include "usb_device.h"
 #include "queuex.h"
-#include "tcp.h"
+#include "tcpip.h"
 #include "led.h"
 #include "monitor.h"
 #include "dhcpserver.h"
@@ -80,23 +80,23 @@ int main( void )
    // Reset of all peripherals, Initializes the Flash interface and the Systick.
    HAL_Init();
    
-   // Configure the system clock
+   // Configure the system clock.
    SystemClock_Config();
    
-   // init peripherals
+   // Init peripherals
    monitor_init();
    led_init();
-   tcp_init();
+   tcpip_init();
    usb_init();
    
-   // set the queue on the uart io
+   // Set the queue on the tcpip stack io
    tcpQueue.messageDirection  = TCP_TO_USB;
    tcpQueue.output            = usb_output;
    queue_init(&tcpQueue);
    
-   // set the queue on the usb io
+   // Set the queue on the usb io
    usbQueue.messageDirection   = USB_TO_TCP;
-   usbQueue.output             = tcp_output;  
+   usbQueue.output             = tcpip_output;  
    queue_init(&usbQueue);
    
    // Init scheduler
@@ -105,7 +105,7 @@ int main( void )
    // Start scheduler
    osKernelStart();
    
-   // infinite loop
+   // Infinite loop
    while (1)
    {
    }

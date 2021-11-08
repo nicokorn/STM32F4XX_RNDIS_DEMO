@@ -53,7 +53,7 @@
 #include "stm32f4xx_hal.h"
     
 /* Project includes. */
-#include "tcp.h"
+#include "tcpip.h"
 
 // Private define *************************************************************
 
@@ -81,7 +81,7 @@ by pxDescriptor->xDataLength. */
 BaseType_t xNetworkInterfaceOutput( NetworkBufferDescriptor_t * const pxDescriptor, BaseType_t xReleaseAfterSend )
 {
    // fix pointer length from the rtos buffer
-   tcp_enqueue( pxDescriptor->pucEthernetBuffer, pxDescriptor->xDataLength );
+   tcpip_enqueue( pxDescriptor->pucEthernetBuffer, pxDescriptor->xDataLength );
    
    // finish the transmission
    // release the allocated buffer
