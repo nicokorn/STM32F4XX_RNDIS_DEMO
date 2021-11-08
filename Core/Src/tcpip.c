@@ -1,7 +1,7 @@
 // ****************************************************************************
-/// \file      pcu_bus_uart_tcp.c
+/// \file      tcpip.c
 ///
-/// \brief     TCP/IP Stack Application Level C Source File
+/// \brief     TCP/IP stack application level header file
 ///
 /// \details   Module for the handling of the freertos tcp ip stack.
 ///
@@ -172,13 +172,13 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent )
 {
    static BaseType_t xTasksAlreadyCreated = pdFALSE;
 
-	// If the network has just come up...
-	if( eNetworkEvent == eNetworkUp )
-	{
-		// ...create the tasks that use the IP stack if they have not already been
-		// created.
-		if( xTasksAlreadyCreated == pdFALSE )
-		{
+   // If the network has just come up...
+   if( eNetworkEvent == eNetworkUp )
+   {
+      // ...create the tasks that use the IP stack if they have not already been
+      // created.
+      if( xTasksAlreadyCreated == pdFALSE )
+      {
          // start webserver
          httpserver_init();
          
@@ -187,11 +187,11 @@ void vApplicationIPNetworkEventHook( eIPCallbackEvent_t eNetworkEvent )
          
          // start dns server
          dnsserver_init();
-
+      
          // set the task created flag
          xTasksAlreadyCreated = pdTRUE;
-		}
-	}
+      }
+   }
 }
 
 //-----------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 // ****************************************************************************
-/// \file      tcp.h
+/// \file      tcpip.h
 ///
-/// \brief     TCP/IP Stack Application Level C Header File
+/// \brief     TCP/IP stack application level header file
 ///
 /// \details   Module for the handling of the freertos tcp ip stack
 ///
