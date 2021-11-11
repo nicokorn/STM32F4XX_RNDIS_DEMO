@@ -537,7 +537,7 @@ static void httpserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, S
       "<p>___</p>"
          
       "<p><div class='slidecontainer'>"
-         "Led Dimmer<input type='range' min='1' max='40' value=%d class='slider' id='myRange'>"
+         "Led Dimmer<input type='range' min='2' max='40' value=%d class='slider' id='myRange'>"
       "</div></p>" 
          
       "<script>"
