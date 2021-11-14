@@ -14,7 +14,7 @@
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.1
+/// \version   0.3.0.2 - experimental, not yet released
 ///
 /// \date      29102021
 /// 

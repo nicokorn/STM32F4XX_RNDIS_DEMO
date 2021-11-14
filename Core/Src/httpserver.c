@@ -7,9 +7,9 @@
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.1
+/// \version   0.3.0.2 - experimental, not yet released
 ///
-/// \date      08112021
+/// \date      14112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///
@@ -94,8 +94,8 @@ static const char *webpage_top = {
    //"Keep-Alive: timeout=20\r\n" 
    //"Connection: keep-alive\r\n\r\n"
 
-   "<html><head>"
-      
+   "<html lang='en'><head>"
+   "<meta charset='utf-8'>"
    "<style type='text/css'>"
    // header text
    "#box1 {background-color: orange; background-image: linear-gradient(red, black);}"
@@ -798,6 +798,7 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
       "};"
          
       "setInterval(renderTime, 1000);"
+      "renderTime();"
          
       // rtos data fetch method
       "async function getRtos(){"
@@ -830,7 +831,8 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "rtoscontainer.innerHTML = html;"
       "};"
          
-      "setInterval(renderRtos, 5000);"
+      "setInterval(renderRtos, 10000);"
+      "renderRtos();"
          
       // rtos data fetch method
       "async function getSensor(){"
@@ -856,7 +858,8 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "sensorcontainer.innerHTML = html;"
       "};"
          
-      "setInterval(renderSensor, 10000);"
+      "setInterval(renderSensor, 2000);"
+      "renderSensor();"
 
       "</script>"
    };

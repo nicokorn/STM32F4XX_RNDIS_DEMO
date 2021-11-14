@@ -8,9 +8,9 @@
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.1
+/// \version   0.3.0.2 - experimental, not yet released
 ///
-/// \date      08112021
+/// \date      14112021
 /// 
 /// \copyright Copyright (C) 2021 by "Nico Korn". nico13@hispeed.ch
 ///            
