@@ -90,7 +90,7 @@ static uint32_t   guestCounter;
 // the webpage top header
 static const char *webpage_top = {
    "HTTP/1.1 200 OK\r\n"
-   "Content-Type: text/html\r\n\r\n" //"Content-Type: text/html; charset=utf-8\r\n"
+   "Content-Type: text/html; charset=utf-8\r\n\r\n"
    //"Keep-Alive: timeout=20\r\n" 
    //"Connection: keep-alive\r\n\r\n"
 
@@ -128,18 +128,23 @@ static const char *webpage_bottom_no_btn = {
 // Global variables ***********************************************************
 
 // Private function prototypes ************************************************
-static void       httpserver_listen        ( void *pvParameters );
-static void       httpserver_handle        ( void *pvParameters );
-static void       httpserver_homepage      ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static uint16_t   httpserver_favicon       ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       httpserver_205           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       httpserver_204           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       httpserver_204Refresh    ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       httpserver_201           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       httpserver_200           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       httpserver_301           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       httpserver_400           ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
-static void       httpserver_lastPacket    ( Socket_t xConnectedSocket );
+static void       httpserver_listen          ( void *pvParameters );
+static void       httpserver_handle          ( void *pvParameters );
+static void       httpserver_homepage        ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_homepageFetch   ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_fetchTime       ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_fetchTimeJSON   ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_fetchRtosJSON   ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_fetchSensorJSON ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static uint16_t   httpserver_favicon         ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_205             ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_204             ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_204Refresh      ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_201             ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_200             ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_301             ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_400             ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_lastPacket      ( Socket_t xConnectedSocket );
 
 // Functions ******************************************************************
 
@@ -323,7 +328,31 @@ static void httpserver_handle( void *pvParameters )
             if(memcmp((char const*)uri, "/home", 5u) == 0)
             {
                // mainpage
-               httpserver_homepage( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               httpserver_homepageFetch( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               
+               // listen to the socket again
+               continue;
+            }
+            else if(memcmp((char const*)uri, "/time.json", 10u) == 0)
+            {
+               // mainpage
+               httpserver_fetchTimeJSON( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               
+               // listen to the socket again
+               continue;
+            }
+            else if(memcmp((char const*)uri, "/rtos.json", 10u) == 0)
+            {
+               // mainpage
+               httpserver_fetchRtosJSON( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               
+               // listen to the socket again
+               continue;
+            }
+            else if(memcmp((char const*)uri, "/sensor.json", 12u) == 0)
+            {
+               // mainpage
+               httpserver_fetchSensorJSON( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
                
                // listen to the socket again
                continue;
@@ -331,7 +360,7 @@ static void httpserver_handle( void *pvParameters )
             else
             {
                // send 400
-               httpserver_homepage( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               httpserver_homepageFetch( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
                
                // listen to the socket again
                continue;
@@ -561,7 +590,7 @@ static void httpserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, S
       "</script>"
           
       "<p><form action='led_pulse' method='post'><button  style='width:200px'>Led Pulse</button></form></p>"
-      "<p>Temperature: %.1f C"
+      "<p>Temperature: %.1f C</p>"
       "<p>Voltage: %.2f V</p>"
       "<p>___</p>"
       "<p>Guest counter: %d</p>" 
@@ -658,6 +687,447 @@ static void httpserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, S
    }
    vPortFree(task);
    /////////////////////////////////////////////////////////////////////////////
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Main page of the device. With an overview of important data using
+///            the javascript fetch method.
+///
+/// \param     [in]  uint8_t* pageBuffer
+/// \param     [in]  uint16_t pageBufferSize
+/// \param     [in]  Socket_t xConnectedSocket
+///
+/// \return    none
+static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+{
+   uint16_t 		   stringLength;
+   uint8_t  		   *ipAddress8b;
+   uint32_t 		   ipAddress;
+   uint32_t 		   netMask;
+   uint32_t 		   dnsAddress;
+   uint32_t 		   gatewayAddress;
+   const uint8_t* 	stackMacAddress;
+   uint8_t           dutyCycle;
+   
+   static const char *webpage_panelcontrollerMonitor = {
+      
+      "<style type='text/css'>"
+         
+      // header text
+      "#box1 {background-color: orange; background-image: linear-gradient(red, black);}"
+         
+      // slider
+      ".slidecontainer {width: 100%;}"
+      ".slider {-webkit-appearance: none;width: 250px;height: 15px;border-radius: 5px;background: #d3d3d3;outline: none;opacity: 0.7;-webkit-transition: .2s;transition: opacity .2s;}"
+      ".slider:hover {opacity: 1;}"
+      ".slider::-moz-range-thumb {width: 25px;height: 25px;border-radius: 50%;background: #04AA6D;cursor: pointer;}"
+      "</style>"
+      
+      // page html frontend data
+      "<p><h3>Homepage</h3></p>"
+      "<p>___</p>"
+      "<p>IP: %d.%d.%d.%d</p>"
+      "<p>MAC: %02x:%02x:%02x:%02x:%02x:%02x</p>"
+      "<p><div class='timecontainer'></div></p>"
+      "<p>___</p>"
+      "<p>FreeRTOS Version: %s</p>"
+      "<p><div class='rtoscontainer'></div></p>"
+      //"<p>Free Heap: %d bytes</p>"
+      //"<p>Running Tasks</p>"
+      //"<p>- Task 1: %s, Priority: %d</p>"
+      //"<p>- Task 2: %s, Priority: %d</p>"
+      //"<p>- Task 3: %s, Priority: %d</p>"
+      //"<p>- Task 4: %s, Priority: %d</p>"
+      //"<p>- Task 5: %s, Priority: %d</p>"
+      //"<p>- Task 6: %s, Priority: %d</p>"
+      //"<p>- Task 7: %s, Priority: %d</p>"
+      "<p>___</p>"
+         
+      "<p><div class='slidecontainer'>"
+         "Led Dimmer<input type='range' min='2' max='40' value=%d class='slider' id='myRange'>"
+      "</div></p>" 
+
+      "<p><form action='led_pulse' method='post'><button  style='width:200px'>Led Pulse</button></form></p>"
+      "<p><div class='sensorcontainer'></div></p>"
+      //"<p>Temperature: %.1f C"
+      //"<p>Voltage: %.2f V</p>"
+      "<p>___</p>"
+      "<p>Guest counter: %d</p>" 
+      "<br />"
+         
+      "<script>"
+      "var xhr=new XMLHttpRequest();"
+      "var slider=document.getElementById('myRange');"
+      "var block=0;"
+         
+      "function unblock(){block=0;};"
+      
+      // block next post request triggert by the slider for 250 ms to avoid "spamming"
+      "slider.oninput=function(){"
+         "if(block==0){"
+            "block=1;"
+            "var urlpost='/led_set_value/'+this.value;"
+            "xhr.open('POST', urlpost, true);"
+            "xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');"
+            "xhr.send('zero');"
+            "setTimeout(unblock, 150);"
+         "}"
+      "};"
+         
+      // time fetch method
+      "async function getTime(){"
+         "let url = 'time.json';"
+         "try{"
+            "let res = await fetch(url);"
+            "return await res.json();"
+         "}catch(error){"
+            "console.log(error);"
+         "}"
+      "};"
+         
+      "async function renderTime(){"
+         "let time = await getTime();"
+         "let html = '';"
+         "let htmlSegment = `<div class='time'>"
+                                 "Uptime: ${time.d} days, ${time.h} hours, ${time.m} minutes, ${time.s} seconds"
+                              "</div>`;"
+         "html += htmlSegment;"
+      
+         "let timecontainer = document.querySelector('.timecontainer');"
+         "timecontainer.innerHTML = html;"
+      "};"
+         
+      "setInterval(renderTime, 1000);"
+         
+      // rtos data fetch method
+      "async function getRtos(){"
+         "let url = 'rtos.json';"
+         "try{"
+            "let res = await fetch(url);"
+            "return await res.json();"
+         "}catch(error){"
+            "console.log(error);"
+         "}"
+      "};"
+         
+      "async function renderRtos(){"
+         "let rtos = await getRtos();"
+         "let html = '';"
+         "let htmlSegment = `<div class='rtos'>"
+                                 "<p>Free Heap: ${rtos.heap} bytes</p>"
+                                 "<p>Running Tasks</p>"
+                                 "<p>- Task 1: ${rtos.t1n}, Priority: ${rtos.t1p}</p>"
+                                 "<p>- Task 2: ${rtos.t2n}, Priority: ${rtos.t2p}</p>"
+                                 "<p>- Task 3: ${rtos.t3n}, Priority: ${rtos.t3p}</p>"
+                                 "<p>- Task 4: ${rtos.t4n}, Priority: ${rtos.t4p}</p>"
+                                 "<p>- Task 5: ${rtos.t5n}, Priority: ${rtos.t5p}</p>"
+                                 "<p>- Task 6: ${rtos.t6n}, Priority: ${rtos.t6p}</p>"
+                                 "<p>- Task 7: ${rtos.t7n}, Priority: ${rtos.t7p}</p>"
+                              "</div>`;"
+         "html += htmlSegment;"
+      
+         "let rtoscontainer = document.querySelector('.rtoscontainer');"
+         "rtoscontainer.innerHTML = html;"
+      "};"
+         
+      "setInterval(renderRtos, 5000);"
+         
+      // rtos data fetch method
+      "async function getSensor(){"
+         "let url = 'sensor.json';"
+         "try{"
+            "let res = await fetch(url);"
+            "return await res.json();"
+         "}catch(error){"
+            "console.log(error);"
+         "}"
+      "};"
+         
+      "async function renderSensor(){"
+         "let sensor = await getSensor();"
+         "let html = '';"
+         "let htmlSegment = `<div class='sensor'>"
+                                 "<p>Temperature: ${sensor.temp} C</p>"
+                                 "<p>Voltage: ${sensor.volt} V</p>"
+                              "</div>`;"
+         "html += htmlSegment;"
+      
+         "let sensorcontainer = document.querySelector('.sensorcontainer');"
+         "sensorcontainer.innerHTML = html;"
+      "};"
+         
+      "setInterval(renderSensor, 10000);"
+
+      "</script>"
+   };
+   
+   // set the placeholder in every webpage fragment and put all fragments together
+   // top header
+   stringLength = snprintf(0, 0, webpage_top);
+   snprintf((char*)pageBuffer, stringLength+1, webpage_top);
+   
+   // send fragment of the webpage//////////////////////////////////////////////
+   if( stringLength < pageBufferSize )
+   {
+      FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
+   }
+   /////////////////////////////////////////////////////////////////////////////
+   
+   // panelcontroller monitor
+   FreeRTOS_GetAddressConfiguration( &ipAddress, &netMask, &gatewayAddress, &dnsAddress );
+   ipAddress8b       = (uint8_t*)(&ipAddress);
+   stackMacAddress   = FreeRTOS_GetMACAddress();
+   dutyCycle = led_getDuty();
+   guestCounter++;
+   stringLength = snprintf(0, 0, webpage_panelcontrollerMonitor, 
+                           ipAddress8b[0], ipAddress8b[1], ipAddress8b[2], ipAddress8b[3], 
+                           stackMacAddress[0], stackMacAddress[1], stackMacAddress[2], stackMacAddress[3], stackMacAddress[4], stackMacAddress[5], 
+                           tskKERNEL_VERSION_NUMBER,
+                           dutyCycle, 
+                           guestCounter );
+   snprintf((char*)pageBuffer, stringLength+1, webpage_panelcontrollerMonitor, 
+                           ipAddress8b[0], ipAddress8b[1], ipAddress8b[2], ipAddress8b[3], 
+                           stackMacAddress[0], stackMacAddress[1], stackMacAddress[2], stackMacAddress[3], stackMacAddress[4], stackMacAddress[5], 
+                           tskKERNEL_VERSION_NUMBER, 
+                           dutyCycle, 
+                           guestCounter );
+   
+   // send fragment of the webpage//////////////////////////////////////////////
+   if( stringLength < pageBufferSize )
+   {
+      FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
+   }
+   /////////////////////////////////////////////////////////////////////////////
+   
+   // bottom
+   stringLength = snprintf(0, 0, webpage_bottom_no_btn);
+   snprintf((char*)pageBuffer, stringLength+1, webpage_bottom_no_btn);
+   
+   // send fragment of the webpage//////////////////////////////////////////////
+   if( stringLength < pageBufferSize )
+   {
+      httpserver_lastPacket( xConnectedSocket );
+      FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
+   }
+   /////////////////////////////////////////////////////////////////////////////
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Send time as html fragment of the page. For the js fetch method.
+///
+/// \param     [in]  uint8_t* pageBuffer
+/// \param     [in]  uint16_t pageBufferSize
+/// \param     [in]  Socket_t xConnectedSocket
+///
+/// \return    none
+static void httpserver_fetchTime( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+{
+   uint16_t stringLength;
+   uint32_t totalSeconds;
+   uint32_t days;
+   uint32_t hours;
+   uint32_t minutes;
+   uint32_t seconds;
+
+   static const char *webpage_fetchTime = {
+      "HTTP/1.1 200 OK\r\n"
+      "Content-Type: text/html\r\n\r\n" //"Content-Type: text/html; charset=utf-8\r\n"
+
+      //"<html><head></head>"
+      //"<body>"
+      "<p>Uptime: %d days, %d hours, %d minutes, %d seconds</p>"
+      //"</body></html>"
+   };
+   
+   totalSeconds      = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
+   days              = (totalSeconds / 86400);       
+   hours             = (totalSeconds / 3600) % 24;   
+   minutes           = (totalSeconds / 60) % 60;     
+   seconds           = totalSeconds % 60;  
+   
+   stringLength = snprintf(0, 0, webpage_fetchTime, 
+                           days, hours, minutes, seconds);
+      
+   snprintf((char*)pageBuffer, stringLength+1, webpage_fetchTime, 
+                           days, hours, minutes, seconds);
+   
+   httpserver_lastPacket( xConnectedSocket );
+   FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Send time as json fragment of the page. For the js fetch method.
+///
+/// \param     [in]  uint8_t* pageBuffer
+/// \param     [in]  uint16_t pageBufferSize
+/// \param     [in]  Socket_t xConnectedSocket
+///
+/// \return    none
+static void httpserver_fetchTimeJSON( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+{
+   uint16_t stringLength;
+   uint32_t totalSeconds;
+   uint32_t days;
+   uint32_t hours;
+   uint32_t minutes;
+   uint32_t seconds;
+
+   static const char *webpage_fetchTime = {
+      "HTTP/1.1 200 OK\r\n"
+      "Content-Type: application/json\r\n\r\n"
+      "{"
+        "\"d\": \"%d\","
+        "\"h\": \"%d\","
+        "\"m\": \"%d\","
+        "\"s\": \"%d\""
+      "}"
+   };
+   
+   totalSeconds      = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
+   days              = (totalSeconds / 86400);       
+   hours             = (totalSeconds / 3600) % 24;   
+   minutes           = (totalSeconds / 60) % 60;     
+   seconds           = totalSeconds % 60;  
+   
+   stringLength = snprintf(0, 0, webpage_fetchTime, 
+                           days, hours, minutes, seconds);
+      
+   snprintf((char*)pageBuffer, stringLength+1, webpage_fetchTime, 
+                           days, hours, minutes, seconds);
+   
+   httpserver_lastPacket( xConnectedSocket );
+   FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Send rtos data as json fragment of the page. For the js fetch method.
+///
+/// \param     [in]  uint8_t* pageBuffer
+/// \param     [in]  uint16_t pageBufferSize
+/// \param     [in]  Socket_t xConnectedSocket
+///
+/// \return    none
+static void httpserver_fetchRtosJSON( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+{
+   uint16_t          stringLength;
+   size_t 		      freeheap;
+   const uint8_t* 	stackMacAddress;
+   osThreadId_t      tasks[7] = {0};
+   uint32_t          tasksNr = 7;
+   uint8_t           taskCount;
+   TaskStatus_t      *task;
+
+   static const char *webpage_fetchRtos = {
+      "HTTP/1.1 200 OK\r\n"
+      "Content-Type: application/json\r\n\r\n"
+      "{"
+         // heap
+        "\"heap\": \"%d\","
+        // tasks
+        "\"t1n\": \"%s\","
+        "\"t2n\": \"%s\","
+        "\"t3n\": \"%s\","
+        "\"t4n\": \"%s\","
+        "\"t5n\": \"%s\","
+        "\"t6n\": \"%s\","    
+        "\"t7n\": \"%s\","   
+        "\"t1p\": \"%d\","
+        "\"t2p\": \"%d\","
+        "\"t3p\": \"%d\","
+        "\"t4p\": \"%d\","
+        "\"t5p\": \"%d\","
+        "\"t6p\": \"%d\","
+        "\"t7p\": \"%d\""   
+      "}"
+   };
+
+   freeheap    = xPortGetFreeHeapSize();
+   taskCount   = uxTaskGetNumberOfTasks();
+   task        = pvPortMalloc(taskCount * sizeof(TaskStatus_t));
+   if (task != NULL)
+   {
+      taskCount = uxTaskGetSystemState(task, taskCount, NULL);
+   }
+   else
+   {
+      return;
+   }
+   
+   stringLength = snprintf(0, 0, webpage_fetchRtos, 
+                           freeheap, 
+                           task[0].pcTaskName, 
+                           task[1].pcTaskName,  
+                           task[2].pcTaskName,  
+                           task[3].pcTaskName,  
+                           task[4].pcTaskName,  
+                           task[5].pcTaskName, 
+                           task[6].pcTaskName,
+                           task[0].uxCurrentPriority, 
+                           task[1].uxCurrentPriority,                            
+                           task[2].uxCurrentPriority,                            
+                           task[3].uxCurrentPriority,                            
+                           task[4].uxCurrentPriority,                            
+                           task[5].uxCurrentPriority,                            
+                           task[6].uxCurrentPriority);                           
+
+   snprintf((char*)pageBuffer, stringLength+1, webpage_fetchRtos, 
+                           freeheap, 
+                           task[0].pcTaskName, 
+                           task[1].pcTaskName,  
+                           task[2].pcTaskName,  
+                           task[3].pcTaskName,  
+                           task[4].pcTaskName,  
+                           task[5].pcTaskName, 
+                           task[6].pcTaskName,
+                           task[0].uxCurrentPriority, 
+                           task[1].uxCurrentPriority,                            
+                           task[2].uxCurrentPriority,                            
+                           task[3].uxCurrentPriority,                            
+                           task[4].uxCurrentPriority,                            
+                           task[5].uxCurrentPriority,                            
+                           task[6].uxCurrentPriority);  
+   
+   httpserver_lastPacket( xConnectedSocket );
+   FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
+   vPortFree(task);
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Send sensordata as json fragment of the page. For the js fetch method.
+///
+/// \param     [in]  uint8_t* pageBuffer
+/// \param     [in]  uint16_t pageBufferSize
+/// \param     [in]  Socket_t xConnectedSocket
+///
+/// \return    none
+static void httpserver_fetchSensorJSON( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+{
+   uint16_t          stringLength;
+   float             temperature;
+   float             voltage;
+
+   static const char *webpage_fetchSensor = {
+      "HTTP/1.1 200 OK\r\n"
+      "Content-Type: application/json\r\n\r\n"
+      "{"
+        "\"temp\": \"%.1f\","
+        "\"volt\": \"%.2f\""   
+      "}"
+   };
+
+   temperature = monitor_getTemperature();
+   voltage     = monitor_getVoltage();
+   
+   stringLength = snprintf(0, 0, webpage_fetchSensor, 
+                           temperature,
+                           voltage);
+      
+   snprintf((char*)pageBuffer, stringLength+1, webpage_fetchSensor, 
+                           temperature,
+                           voltage);
+   
+   httpserver_lastPacket( xConnectedSocket );
+   FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
 }
 
 // ----------------------------------------------------------------------------
