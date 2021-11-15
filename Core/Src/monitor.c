@@ -50,13 +50,18 @@
 #include "monitor.h"
 
 // Private define *************************************************************
-#define TEMP_SENSOR_AVG_SLOPE_MV_PER_CELSIUS                        2.5f
-#define TEMP_SENSOR_VOLTAGE_MV_AT_25                                760.0f
-#define ADC_REFERENCE_VOLTAGE_V                                     3.5f
-#define ADC_MAX_OUTPUT_VALUE                                        4095.0f
-#define TS30                                                        (int32_t)(*((uint16_t*) 0x1FFF7A2C ))
-#define TS110                                                       (int32_t)(*((uint16_t*) 0x1FFF7A2E ))
-#define VREF_CAL                                                    (int32_t)(*((uint16_t*) 0x1FFF7A2A ))
+#define TEMP_SENSOR_AVG_SLOPE_MV_PER_CELSIUS    2.5f
+#define TEMP_SENSOR_VOLTAGE_MV_AT_25            760.0f
+#define ADC_REFERENCE_VOLTAGE_V                 3.5f
+#define ADC_MAX_OUTPUT_VALUE                    4095.0f
+#define TS30                                    (int32_t)(*((uint16_t*) 0x1FFF7A2C ))
+#define TS110                                   (int32_t)(*((uint16_t*) 0x1FFF7A2E ))
+#define VREF_CAL                                (int32_t)(*((uint16_t*) 0x1FFF7A2A ))
+#define INTERNAL_TEMPSENSOR_AVGSLOPE            ((int32_t) 2500)        /* Internal temperature sensor, parameter Avg_Slope (unit: uV/DegCelsius). Refer to device datasheet for min/typ/max values. */
+#define INTERNAL_TEMPSENSOR_V25                 ((int32_t)  760)        /* Internal temperature sensor, parameter V25 (unit: mV). Refer to device datasheet for min/typ/max values. */
+#define INTERNAL_TEMPSENSOR_V25_TEMP            ((int32_t)   25)
+#define INTERNAL_TEMPSENSOR_V25_VREF            ((int32_t) 3300)
+#define VDDA_APPLI                              ((uint32_t)3300)
 
 // Private types     **********************************************************
 
@@ -160,8 +165,16 @@ static void statusMonitorTask( void *pvParameters )
       {
          ADC_Value = (&ADC_Handle)->Instance->DR;
          HAL_ADC_Stop(&ADC_Handle);
+         
+         //temperature = __LL_ADC_CALC_TEMPERATURE_TYP_PARAMS( INTERNAL_TEMPSENSOR_AVGSLOPE, 
+         //                                                   INTERNAL_TEMPSENSOR_V25,
+         //                                                   INTERNAL_TEMPSENSOR_V25_TEMP,
+         //                                                   VDDA_APPLI,
+         //                                                   ADC_Value,
+         //                                                   LL_ADC_RESOLUTION_12B);
+         
          mvSensing = 1000 * ((ADC_REFERENCE_VOLTAGE_V * ADC_Value) / (ADC_MAX_OUTPUT_VALUE+1.0f));
-         temperature = (mvSensing-TEMP_SENSOR_VOLTAGE_MV_AT_25)/TEMP_SENSOR_AVG_SLOPE_MV_PER_CELSIUS + 20.0f;
+         temperature = (mvSensing-TEMP_SENSOR_VOLTAGE_MV_AT_25)/TEMP_SENSOR_AVG_SLOPE_MV_PER_CELSIUS;// + 20.0f;
       }
 
       // Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 

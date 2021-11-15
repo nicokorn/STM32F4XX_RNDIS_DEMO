@@ -64,8 +64,8 @@ queue_handle_t tcpQueue;
 queue_handle_t usbQueue;
    
 // Private function prototypes ************************************************
-void SystemClock_Config   ( void );
-void startRndisTask       ( void *argument );
+static void systemClock_Config   ( void );
+static void init_btn             ( void );
 
 // Private functions **********************************************************
 
@@ -81,13 +81,14 @@ int main( void )
    HAL_Init();
    
    // Configure the system clock.
-   SystemClock_Config();
+   systemClock_Config();
    
    // Init peripherals
    monitor_init();
    led_init();
    tcpip_init();
    usb_init();
+   init_btn();
    
    // Set the queue on the tcpip stack io
    tcpQueue.messageDirection  = TCP_TO_USB;
@@ -113,8 +114,7 @@ int main( void )
 
 // ----------------------------------------------------------------------------
 /// \brief     Called by the task.c freertos module. Calling origin is the idle
-///            task. Never block this function for too long otherwise the
-///            watchdog wont be kicked thus a restart will be initiated.
+///            task.
 ///
 /// \param     none
 ///
@@ -126,12 +126,32 @@ void vApplicationIdleHook( void )
 }
 
 // ----------------------------------------------------------------------------
+/// \brief     Called by the task.c freertos module. Calling origin is the idle
+///            task.
+///
+/// \param     none
+///
+/// \return    none
+static void init_btn( void )
+{
+   // Enable GPIOA Clock
+   __HAL_RCC_GPIOA_CLK_ENABLE();
+  
+   // Configure PA0 as input for getting the btn status.
+   GPIO_InitTypeDef  GPIO_InitStruct;
+   GPIO_InitStruct.Pin     = GPIO_PIN_0;
+   GPIO_InitStruct.Mode    = GPIO_MODE_INPUT;
+   GPIO_InitStruct.Pull    = GPIO_PULLUP;
+   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct); 
+}
+
+// ----------------------------------------------------------------------------
 /// \brief     System clock configuration.
 ///
 /// \param     none
 ///
 /// \return    none
-void SystemClock_Config( void )
+void systemClock_Config( void )
 {
    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};

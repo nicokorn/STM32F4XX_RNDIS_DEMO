@@ -62,7 +62,7 @@
 
 // Private defines ************************************************************
 #define URIBUFFER       ( 500u )
-#define TXBUFFERSIZE    ( 4000u )
+#define TXBUFFERSIZE    ( 5000u )
 #define FAVICON         "<link rel=\"shortcut icon\" href=\"data:image/gif;base64,R0lGODlhIAAgAHAAACwAAAAAIAAgAIf////s2+Pqt8j/wNT/v836wsv/xM7/wM7/w9L6ws38uMP4ZHTQCyfgAB7cABnXBhzeBh7bABjiAR/iAB3UAC3wdYfZAwvdAybkAyHqBivjABrgAyblASbiASHjAiLkACXwZ4XkABHsBDTgBCjVASnfASbgBS3eACnhACjiASnXBR7tfpHdAxHpAC3sAifiACXtACXiACbfACXjASfjABnmY3XbBgrYAB7qAB3tAB3tABrgAB3iAB7hAB7ZCCX31+z7vbLjycztw8T0v8fxw8Puysr3vsf1wMj/s6/6v93+m57oo7Xxnaz/nrX3m6rworD9mbH5nLH6nbL1pKPhaXLbBQPfABvhABDrAx3pABDeABDjABbfABXgARbdASXgfY/iABD9AjfcACLTByjoByfgAiffAyfkABvya4ngABDvAzPUAyLfASjjAiTlACndASfeACXkARzleIvZBRHqACvhACLoACjeASDnASjdBCHpaH7gDhfkAyvkBSLqACfeBSDgBybnBSrkBCbjACn67//3x7vz2N354Nz/0+D62t310tj72dr62Nn9zcH4rc7zgobqjKTskJ/6gaDvjqLsiKDwip/viZ7lhYnuanjjDhDjACDhABfmABjdARrnAh/hABniABruAS/ddILTBAzqACjiBiLsCC3hASPkAyPlBCTYAh72b4/iABXwBDXUAyPeACvlACvdACvdACbeACfgAinhBR7vdXLVABnnABvSARflBSDdBB/mAB/vaHnmEz70FULfFzvsFD3lFD7pCzrnEDrVFDMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI/wABCBxIsKDBgwgTKlzIsKHDhxAjPvwhABEBAgYIWDTAsWPGhwEcXeR4caQAjCcVPKyRS4uWllrEuJQpE4aWNQ8rxBSjRowYGD6BAv0p5iEILT19xopFtKnPh5a0wOgJYyhPnz3VaFlZZU2WqkFpii3q8IeCIEWKFCoiwMDJIigJAHmYRMkTJk2gPIHCly9evlMeUqniMksWwi4TJybbUJSWMGLWXFUqhinTrQ6PqlkTayhTykEfOhaK9SfVqU8zZ2I6VM1Qq0AhFklEKFGiQwFu07Ztm9FDRxUsWZIECZJw4Y+OW7L1sBfiLC5tztQCHanoUVl9EgUrNJdRpKU/Ky5dyvShLTFZcml/7TPLT8wNexX7JezXfDXFiOknZp9YMYkABijggAQWaOCBAAQEADs=\" />"
 
 // Private types     **********************************************************
@@ -721,6 +721,104 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
       ".slider {-webkit-appearance: none;width: 250px;height: 15px;border-radius: 5px;background: #d3d3d3;outline: none;opacity: 0.7;-webkit-transition: .2s;transition: opacity .2s;}"
       ".slider:hover {opacity: 1;}"
       ".slider::-moz-range-thumb {width: 25px;height: 25px;border-radius: 50%;background: #04AA6D;cursor: pointer;}"
+         
+      // blackpill
+      ".blackpill {"
+         "position: absolute;"
+         "top: 800px;"
+         "left: 450px;"
+         "transform: scale(0.5);"
+      "}"
+      ".border {"
+         "width: 900px;"
+         "height: 300px;"
+         "background: #000000;"
+         "position: absolute;"
+         "border-radius: 0% 0% 0% 0%;"
+         "transform: rotate(0deg);"
+         "top: -135px;"
+         "left: -147px;"
+      "}"
+      ".usb {"
+         "width: 150px;"
+         "height: 150px;"
+         "background: #666666;"
+         "position: absolute;"
+         "border-radius: 0% 0% 0% 0%;"
+         "transform: rotate(0deg);"
+         "top: -60px;"
+         "left: -170px;"
+      "}"
+      ".uc1 {"
+         "width: 140px;"
+         "height: 140px;"
+         "background: #666666;"
+         "position: absolute;"
+         "border-radius: 0% 0% 0% 0%;"
+         "transform: rotate(45deg);"
+         "top: -60px;"
+         "left: 250px;"
+      "}"
+      ".uc2 {"
+         "width: 130px;"
+         "height: 130px;"
+         "background: #000000;"
+         "position: absolute;"
+         "border-radius: 0% 0% 0% 0%;"
+         "transform: rotate(45deg);"
+         "top: -55px;"
+         "left: 255px;"
+      "}"
+      ".key1 {"
+         "width: 90px;"
+         "height: 60px;"
+         "background: #CCCCCC;"
+         "position: absolute;"
+         "border-radius: 0% 0% 0% 0%;"
+         "transform: rotate(0deg);"
+         "top: 20px;"
+         "left: 550px;"
+      "}"
+      ".key2 {"
+         "width: 55px;"
+         "height: 55px;"
+         "background: #000000;"
+         "position: absolute;"
+         "border-radius: 100% 100% 100% 100%;"
+         "transform: rotate(0deg);"
+         "top: 22px;"
+         "left: 567px;"
+      "}"
+      ".led {"
+         "width: 60px;"
+         "height: 60px;"
+         "background: #0000ff;"
+         "position: absolute;"
+         "border-radius: 100% 100% 100% 100%;"
+         "transform: rotate(0deg);"
+         "top: -60px;"
+         "left: 565px;"
+      "}"
+      ".pins1 {"
+         "width: 850px;"
+         "height: 20px;"
+         "background: #EBDC03;"
+         "position: absolute;"
+         "border-radius: 0% 0% 0% 0%;"
+         "transform: rotate(0deg);"
+         "top: -120px;"
+         "left: -120px;"
+      "}"
+      ".pins2 {"
+         "width: 850px;"
+         "height: 20px;"
+         "background: #EBDC03;"
+         "position: absolute;"
+         "border-radius: 0% 0% 0% 0%;"
+         "transform: rotate(0deg);"
+         "top: 130px;"
+         "left: -120px;"
+      "}"
       "</style>"
       
       // page html frontend data
@@ -754,6 +852,18 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
       "<p>___</p>"
       "<p>Guest counter: %d</p>" 
       "<br />"
+         
+      "<div class='blackpill'>"
+         "<div class='border'></div>"
+         "<div class='usb'></div>"
+         "<div class='uc1'></div>"
+         "<div class='uc2'></div>"
+         "<div class='key1'></div>"
+         "<div class='key2'></div>"
+         "<div class='led'></div>"
+         "<div class='pins1'></div>"
+         "<div class='pins2'></div>"
+      "</div>"
          
       "<script>"
       "var xhr=new XMLHttpRequest();"
@@ -849,6 +959,7 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "let sensor = await getSensor();"
          "let html = '';"
          "let htmlSegment = `<div class='sensor'>"
+                                 "<p>Button: ${sensor.btn}</p>"
                                  "<p>Temperature: ${sensor.temp} C</p>"
                                  "<p>Voltage: ${sensor.volt} V</p>"
                               "</div>`;"
@@ -858,7 +969,7 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "sensorcontainer.innerHTML = html;"
       "};"
          
-      "setInterval(renderSensor, 2000);"
+      "setInterval(renderSensor, 500);"
       "renderSensor();"
 
       "</script>"
@@ -1108,24 +1219,38 @@ static void httpserver_fetchSensorJSON( uint8_t* pageBuffer, uint16_t pageBuffer
    uint16_t          stringLength;
    float             temperature;
    float             voltage;
+   const char*       released = {"Released"};
+   const char*       pushed = {"Pushed"};
+   const char*       btnState;
 
    static const char *webpage_fetchSensor = {
       "HTTP/1.1 200 OK\r\n"
       "Content-Type: application/json\r\n\r\n"
       "{"
+        "\"btn\": \"%s\","
         "\"temp\": \"%.1f\","
         "\"volt\": \"%.2f\""   
       "}"
    };
-
+   
+   if( HAL_GPIO_ReadPin( GPIOA, GPIO_PIN_0 ) != GPIO_PIN_RESET )
+   {
+      btnState = released;
+   }
+   else
+   {
+      btnState = pushed;
+   }
    temperature = monitor_getTemperature();
    voltage     = monitor_getVoltage();
    
    stringLength = snprintf(0, 0, webpage_fetchSensor, 
+                           btnState,
                            temperature,
                            voltage);
       
    snprintf((char*)pageBuffer, stringLength+1, webpage_fetchSensor, 
+                           btnState,
                            temperature,
                            voltage);
    
