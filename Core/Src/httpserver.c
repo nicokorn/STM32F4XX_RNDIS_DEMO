@@ -63,6 +63,7 @@
 // Private defines ************************************************************
 #define URIBUFFER       ( 500u )
 #define TXBUFFERSIZE    ( 5000u )
+#define TXSMALL         ( 512u )
 #define FAVICON         "<link rel=\"shortcut icon\" href=\"data:image/gif;base64,R0lGODlhIAAgAHAAACwAAAAAIAAgAIf////s2+Pqt8j/wNT/v836wsv/xM7/wM7/w9L6ws38uMP4ZHTQCyfgAB7cABnXBhzeBh7bABjiAR/iAB3UAC3wdYfZAwvdAybkAyHqBivjABrgAyblASbiASHjAiLkACXwZ4XkABHsBDTgBCjVASnfASbgBS3eACnhACjiASnXBR7tfpHdAxHpAC3sAifiACXtACXiACbfACXjASfjABnmY3XbBgrYAB7qAB3tAB3tABrgAB3iAB7hAB7ZCCX31+z7vbLjycztw8T0v8fxw8Puysr3vsf1wMj/s6/6v93+m57oo7Xxnaz/nrX3m6rworD9mbH5nLH6nbL1pKPhaXLbBQPfABvhABDrAx3pABDeABDjABbfABXgARbdASXgfY/iABD9AjfcACLTByjoByfgAiffAyfkABvya4ngABDvAzPUAyLfASjjAiTlACndASfeACXkARzleIvZBRHqACvhACLoACjeASDnASjdBCHpaH7gDhfkAyvkBSLqACfeBSDgBybnBSrkBCbjACn67//3x7vz2N354Nz/0+D62t310tj72dr62Nn9zcH4rc7zgobqjKTskJ/6gaDvjqLsiKDwip/viZ7lhYnuanjjDhDjACDhABfmABjdARrnAh/hABniABruAS/ddILTBAzqACjiBiLsCC3hASPkAyPlBCTYAh72b4/iABXwBDXUAyPeACvlACvdACvdACbeACfgAinhBR7vdXLVABnnABvSARflBSDdBB/mAB/vaHnmEz70FULfFzvsFD3lFD7pCzrnEDrVFDMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI/wABCBxIsKDBgwgTKlzIsKHDhxAjPvwhABEBAgYIWDTAsWPGhwEcXeR4caQAjCcVPKyRS4uWllrEuJQpE4aWNQ8rxBSjRowYGD6BAv0p5iEILT19xopFtKnPh5a0wOgJYyhPnz3VaFlZZU2WqkFpii3q8IeCIEWKFCoiwMDJIigJAHmYRMkTJk2gPIHCly9evlMeUqniMksWwi4TJybbUJSWMGLWXFUqhinTrQ6PqlkTayhTykEfOhaK9SfVqU8zZ2I6VM1Qq0AhFklEKFGiQwFu07Ztm9FDRxUsWZIECZJw4Y+OW7L1sBfiLC5tztQCHanoUVl9EgUrNJdRpKU/Ky5dyvShLTFZcml/7TPLT8wNexX7JezXfDXFiOknZp9YMYkABijggAQWaOCBAAQEADs=\" />"
 
 // Private types     **********************************************************
@@ -230,6 +231,7 @@ static void httpserver_handle( void *pvParameters )
    TickType_t        xTimeOnShutdown;
    uint8_t           *pucRxBuffer;
    uint8_t           *pageBuffer;
+   uint8_t           *pucTxBuffer;
    BaseType_t        lengthOfbytes;
    static uint16_t   etimeout;  
    static uint16_t   enomem;  
@@ -243,37 +245,12 @@ static void httpserver_handle( void *pvParameters )
    
    // get the socket
    xConnectedSocket = ( Socket_t ) pvParameters;
-
-	// allocate heap for the page
-   pageBuffer = ( uint8_t * ) pvPortMalloc( TXBUFFERSIZE );
-   
-   if( pageBuffer == NULL )
-   {
-      memset(uri,0x00,URIBUFFER);
-      httpserver_400(uri, TXBUFFERSIZE, xConnectedSocket);
-      memset(uri,0x00,URIBUFFER);
-      FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );    
-      xTimeOnShutdown = xTaskGetTickCount();
-      do
-      {
-         if( FreeRTOS_recv( xConnectedSocket, uri, URIBUFFER, 0 ) < 0 )
-         {
-            vTaskDelay( pdMS_TO_TICKS( 250 ) );
-            break; 
-         }
-      } while( ( xTaskGetTickCount() - xTimeOnShutdown ) < pdMS_TO_TICKS( 5000 ) );
-      serverInstanceMallocError++;
-      FreeRTOS_closesocket( xConnectedSocket );
-      vTaskDelete( NULL );
-      return;
-   }
    
    // allocate heap for frame reception
 	pucRxBuffer = ( uint8_t * ) pvPortMalloc( ipconfigTCP_MSS );
-   
+
    if( pucRxBuffer == NULL )
    {
-      vPortFree( pageBuffer );
       memset(uri,0x00,URIBUFFER);
       httpserver_400(uri, TXBUFFERSIZE, xConnectedSocket);
       memset(uri,0x00,URIBUFFER);
@@ -328,39 +305,49 @@ static void httpserver_handle( void *pvParameters )
             if(memcmp((char const*)uri, "/home", 5u) == 0)
             {
                // mainpage
-               httpserver_homepageFetch( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXBUFFERSIZE );
+               httpserver_homepageFetch( pucTxBuffer, TXBUFFERSIZE, xConnectedSocket );
+               vPortFree( pucTxBuffer );
                
                // listen to the socket again
                continue;
             }
             else if(memcmp((char const*)uri, "/time.json", 10u) == 0)
             {
-               // mainpage
-               httpserver_fetchTimeJSON( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               // send time json object
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
+               httpserver_fetchTimeJSON( pucTxBuffer, TXSMALL, xConnectedSocket );
+               vPortFree( pucTxBuffer );
                
                // listen to the socket again
                continue;
             }
             else if(memcmp((char const*)uri, "/rtos.json", 10u) == 0)
             {
-               // mainpage
-               httpserver_fetchRtosJSON( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               // send rtos data json object
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
+               httpserver_fetchRtosJSON( pucTxBuffer, TXSMALL, xConnectedSocket );
+               vPortFree( pucTxBuffer );
                
                // listen to the socket again
                continue;
             }
             else if(memcmp((char const*)uri, "/sensor.json", 12u) == 0)
             {
-               // mainpage
-               httpserver_fetchSensorJSON( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               // send sensor json object
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
+               httpserver_fetchSensorJSON( pucTxBuffer, TXSMALL, xConnectedSocket );
+               vPortFree( pucTxBuffer );
                
                // listen to the socket again
                continue;
             }
             else
             {
-               // send 400
-               httpserver_homepageFetch( pageBuffer, TXBUFFERSIZE, xConnectedSocket );
+               // send homepage
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXBUFFERSIZE );
+               httpserver_homepageFetch( pucTxBuffer, TXBUFFERSIZE, xConnectedSocket );
+               vPortFree( pucTxBuffer );
                
                // listen to the socket again
                continue;
@@ -392,7 +379,9 @@ static void httpserver_handle( void *pvParameters )
                // toggle led
                led_toggle();
                
-               httpserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
+               httpserver_204(pucTxBuffer, TXSMALL, xConnectedSocket);
+               vPortFree( pucTxBuffer );
 
                // listen to the socket again
                continue; 
@@ -415,7 +404,9 @@ static void httpserver_handle( void *pvParameters )
                }
                
                // send ok rest api
-               httpserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
+               httpserver_204(pucTxBuffer, TXSMALL, xConnectedSocket);
+               vPortFree( pucTxBuffer );
 
                // listen to the socket again
                continue; 
@@ -426,7 +417,10 @@ static void httpserver_handle( void *pvParameters )
                led_setPulse();
                
                // send ok rest api
-               httpserver_204(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
+               httpserver_204(pucTxBuffer, TXSMALL, xConnectedSocket);
+               vPortFree( pucTxBuffer );
+
 
                // listen to the socket again
                continue; 
@@ -434,7 +428,9 @@ static void httpserver_handle( void *pvParameters )
             else
             {
                // send bad request if the uri is faulty
-               httpserver_400(pageBuffer, TXBUFFERSIZE, xConnectedSocket);
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
+               httpserver_400(pucTxBuffer, TXSMALL, xConnectedSocket);
+               vPortFree( pucTxBuffer );
                
                // listen to the socket again
                continue; 
@@ -496,7 +492,6 @@ static void httpserver_handle( void *pvParameters )
    
    /* Finished with the socket, buffer, the task. */
    vPortFree( pucRxBuffer );
-   vPortFree( pageBuffer );
    FreeRTOS_closesocket( xConnectedSocket );
    
    vTaskDelete( NULL );
@@ -712,30 +707,25 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
    static const char *webpage_panelcontrollerMonitor = {
       
       "<style type='text/css'>"
-         
-      // header text
-      "#box1 {background-color: orange; background-image: linear-gradient(red, black);}"
-         
+
       // slider
       ".slidecontainer {width: 100%;}"
-      ".slider {-webkit-appearance: none;width: 250px;height: 15px;border-radius: 5px;background: #d3d3d3;outline: none;opacity: 0.7;-webkit-transition: .2s;transition: opacity .2s;}"
+      ".slider {-webkit-appearance: none;width: 200px;height: 15px;border-radius: 5px;background: #d3d3d3;outline: none;opacity: 0.7;-webkit-transition: .2s;transition: opacity .2s;}"
       ".slider:hover {opacity: 1;}"
       ".slider::-moz-range-thumb {width: 25px;height: 25px;border-radius: 50%;background: #04AA6D;cursor: pointer;}"
          
       // blackpill
       ".blackpill {"
          "position: absolute;"
-         "top: 800px;"
-         "left: 450px;"
-         "transform: scale(0.5);"
+         "top: 585px;"
+         "left: 550px;"
+         "transform: scale(0.5) rotate(270deg);"
       "}"
       ".border {"
          "width: 900px;"
          "height: 300px;"
-         "background: #000000;"
+         "background-image: linear-gradient(grey, black);"
          "position: absolute;"
-         "border-radius: 0% 0% 0% 0%;"
-         "transform: rotate(0deg);"
          "top: -135px;"
          "left: -147px;"
       "}"
@@ -744,8 +734,6 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "height: 150px;"
          "background: #666666;"
          "position: absolute;"
-         "border-radius: 0% 0% 0% 0%;"
-         "transform: rotate(0deg);"
          "top: -60px;"
          "left: -170px;"
       "}"
@@ -754,7 +742,6 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "height: 140px;"
          "background: #666666;"
          "position: absolute;"
-         "border-radius: 0% 0% 0% 0%;"
          "transform: rotate(45deg);"
          "top: -60px;"
          "left: 250px;"
@@ -764,7 +751,6 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "height: 130px;"
          "background: #000000;"
          "position: absolute;"
-         "border-radius: 0% 0% 0% 0%;"
          "transform: rotate(45deg);"
          "top: -55px;"
          "left: 255px;"
@@ -774,8 +760,6 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "height: 60px;"
          "background: #CCCCCC;"
          "position: absolute;"
-         "border-radius: 0% 0% 0% 0%;"
-         "transform: rotate(0deg);"
          "top: 20px;"
          "left: 550px;"
       "}"
@@ -785,17 +769,15 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "background: #000000;"
          "position: absolute;"
          "border-radius: 100% 100% 100% 100%;"
-         "transform: rotate(0deg);"
          "top: 22px;"
          "left: 567px;"
       "}"
       ".led {"
          "width: 60px;"
          "height: 60px;"
-         "background: #0000ff;"
+         "background-image: linear-gradient(blue, white);"
          "position: absolute;"
          "border-radius: 100% 100% 100% 100%;"
-         "transform: rotate(0deg);"
          "top: -60px;"
          "left: 565px;"
       "}"
@@ -804,8 +786,6 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "height: 20px;"
          "background: #EBDC03;"
          "position: absolute;"
-         "border-radius: 0% 0% 0% 0%;"
-         "transform: rotate(0deg);"
          "top: -120px;"
          "left: -120px;"
       "}"
@@ -814,10 +794,14 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "height: 20px;"
          "background: #EBDC03;"
          "position: absolute;"
-         "border-radius: 0% 0% 0% 0%;"
-         "transform: rotate(0deg);"
          "top: 130px;"
          "left: -120px;"
+      "}"
+      ".boardinfo {"
+         "position: absolute;"
+         "transform: scale(2) rotate(90deg);"
+         "top: 300px;"
+         "left: 480px;"
       "}"
       "</style>"
       
@@ -839,16 +823,8 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
       //"<p>- Task 5: %s, Priority: %d</p>"
       //"<p>- Task 6: %s, Priority: %d</p>"
       //"<p>- Task 7: %s, Priority: %d</p>"
-      "<p>___</p>"
+      //"<p>___</p>"
          
-      "<p><div class='slidecontainer'>"
-         "Led Dimmer<input type='range' min='2' max='40' value=%d class='slider' id='myRange'>"
-      "</div></p>" 
-
-      "<p><form action='led_pulse' method='post'><button  style='width:200px'>Led Pulse</button></form></p>"
-      "<p><div class='sensorcontainer'></div></p>"
-      //"<p>Temperature: %.1f C"
-      //"<p>Voltage: %.2f V</p>"
       "<p>___</p>"
       "<p>Guest counter: %d</p>" 
       "<br />"
@@ -857,12 +833,22 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "<div class='border'></div>"
          "<div class='usb'></div>"
          "<div class='uc1'></div>"
-         "<div class='uc2'></div>"
+         "<div class='uc2'><font size='4' face='verdana' color='white'>STM32F411</font></div>"
          "<div class='key1'></div>"
          "<div class='key2'></div>"
          "<div class='led'></div>"
          "<div class='pins1'></div>"
          "<div class='pins2'></div>"
+         "<div class='boardinfo'>"
+            "<p><div class='slidecontainer'>"
+               "Led Dimmer<input type='range' min='2' max='40' value=%d class='slider' id='myRange'>"
+            "</div></p>" 
+   
+            "<p><form action='led_pulse' method='post'><button  style='width:200px'>Led Pulse</button></form></p>"
+            "<p><div class='sensorcontainer'></div></p>"
+            //"<p>Temperature: %.1f C"
+            //"<p>Voltage: %.2f V</p>"
+         "</div>" 
       "</div>"
          
       "<script>"
