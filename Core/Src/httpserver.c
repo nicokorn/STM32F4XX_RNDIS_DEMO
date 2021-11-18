@@ -62,8 +62,9 @@
 
 // Private defines ************************************************************
 #define URIBUFFER       ( 500u )
-#define TXBUFFERSIZE    ( 5000u )
-#define TXSMALL         ( 512u )
+#define TXBIG           ( 7000u )
+#define TXSMALL         ( 256u )
+#define TXMEDIUM        ( 512u )
 #define FAVICON         "<link rel=\"shortcut icon\" href=\"data:image/gif;base64,R0lGODlhIAAgAHAAACwAAAAAIAAgAIf////s2+Pqt8j/wNT/v836wsv/xM7/wM7/w9L6ws38uMP4ZHTQCyfgAB7cABnXBhzeBh7bABjiAR/iAB3UAC3wdYfZAwvdAybkAyHqBivjABrgAyblASbiASHjAiLkACXwZ4XkABHsBDTgBCjVASnfASbgBS3eACnhACjiASnXBR7tfpHdAxHpAC3sAifiACXtACXiACbfACXjASfjABnmY3XbBgrYAB7qAB3tAB3tABrgAB3iAB7hAB7ZCCX31+z7vbLjycztw8T0v8fxw8Puysr3vsf1wMj/s6/6v93+m57oo7Xxnaz/nrX3m6rworD9mbH5nLH6nbL1pKPhaXLbBQPfABvhABDrAx3pABDeABDjABbfABXgARbdASXgfY/iABD9AjfcACLTByjoByfgAiffAyfkABvya4ngABDvAzPUAyLfASjjAiTlACndASfeACXkARzleIvZBRHqACvhACLoACjeASDnASjdBCHpaH7gDhfkAyvkBSLqACfeBSDgBybnBSrkBCbjACn67//3x7vz2N354Nz/0+D62t310tj72dr62Nn9zcH4rc7zgobqjKTskJ/6gaDvjqLsiKDwip/viZ7lhYnuanjjDhDjACDhABfmABjdARrnAh/hABniABruAS/ddILTBAzqACjiBiLsCC3hASPkAyPlBCTYAh72b4/iABXwBDXUAyPeACvlACvdACvdACbeACfgAinhBR7vdXLVABnnABvSARflBSDdBB/mAB/vaHnmEz70FULfFzvsFD3lFD7pCzrnEDrVFDMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI/wABCBxIsKDBgwgTKlzIsKHDhxAjPvwhABEBAgYIWDTAsWPGhwEcXeR4caQAjCcVPKyRS4uWllrEuJQpE4aWNQ8rxBSjRowYGD6BAv0p5iEILT19xopFtKnPh5a0wOgJYyhPnz3VaFlZZU2WqkFpii3q8IeCIEWKFCoiwMDJIigJAHmYRMkTJk2gPIHCly9evlMeUqniMksWwi4TJybbUJSWMGLWXFUqhinTrQ6PqlkTayhTykEfOhaK9SfVqU8zZ2I6VM1Qq0AhFklEKFGiQwFu07Ztm9FDRxUsWZIECZJw4Y+OW7L1sBfiLC5tztQCHanoUVl9EgUrNJdRpKU/Ky5dyvShLTFZcml/7TPLT8wNexX7JezXfDXFiOknZp9YMYkABijggAQWaOCBAAQEADs=\" />"
 
 // Private types     **********************************************************
@@ -252,7 +253,7 @@ static void httpserver_handle( void *pvParameters )
    if( pucRxBuffer == NULL )
    {
       memset(uri,0x00,URIBUFFER);
-      httpserver_400(uri, TXBUFFERSIZE, xConnectedSocket);
+      httpserver_400(uri, TXBIG, xConnectedSocket);
       memset(uri,0x00,URIBUFFER);
       FreeRTOS_shutdown( xConnectedSocket, FREERTOS_SHUT_RDWR );    
       xTimeOnShutdown = xTaskGetTickCount();
@@ -305,8 +306,8 @@ static void httpserver_handle( void *pvParameters )
             if(memcmp((char const*)uri, "/home", 5u) == 0)
             {
                // mainpage
-               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXBUFFERSIZE );
-               httpserver_homepageFetch( pucTxBuffer, TXBUFFERSIZE, xConnectedSocket );
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXBIG );
+               httpserver_homepageFetch( pucTxBuffer, TXBIG, xConnectedSocket );
                vPortFree( pucTxBuffer );
                
                // listen to the socket again
@@ -325,8 +326,8 @@ static void httpserver_handle( void *pvParameters )
             else if(memcmp((char const*)uri, "/rtos.json", 10u) == 0)
             {
                // send rtos data json object
-               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
-               httpserver_fetchRtosJSON( pucTxBuffer, TXSMALL, xConnectedSocket );
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXMEDIUM );
+               httpserver_fetchRtosJSON( pucTxBuffer, TXMEDIUM, xConnectedSocket );
                vPortFree( pucTxBuffer );
                
                // listen to the socket again
@@ -345,8 +346,8 @@ static void httpserver_handle( void *pvParameters )
             else
             {
                // send homepage
-               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXBUFFERSIZE );
-               httpserver_homepageFetch( pucTxBuffer, TXBUFFERSIZE, xConnectedSocket );
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXBIG );
+               httpserver_homepageFetch( pucTxBuffer, TXBIG, xConnectedSocket );
                vPortFree( pucTxBuffer );
                
                // listen to the socket again
@@ -725,6 +726,7 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "width: 900px;"
          "height: 300px;"
          "background-image: linear-gradient(grey, black);"
+         "box-shadow: 0 0 1em black;"
          "position: absolute;"
          "top: -135px;"
          "left: -147px;"
@@ -798,37 +800,77 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "left: -120px;"
       "}"
       ".boardinfo {"
-         "position: absolute;"
-         "transform: scale(2) rotate(90deg);"
-         "top: 300px;"
-         "left: 480px;"
+         //"margin:10px;"
+         "padding: 10px;"
+         "width: 250px;"
+         "background: grey;"
+         "border-radius: 10px;"
+         //"position: absolute;"
+         //"transform: scale(2) rotate(90deg);"
+         //"top: 300px;"
+         //"left: 480px;"
+      "}"
+      ".infogeneral {"
+         //"margin:10px;"
+         "padding: 10px;"
+         "width: 400px;"
+         "background: grey;"
+         "border-radius: 10px;"
+         //"position: absolute;"
+         //"top: 100px;"
+         //"left: 20px;"
+      "}"
+      ".infortos {"
+         //"margin:10px;"
+         "padding: 10px;"
+         "width: 400px;"
+         "background: grey;"
+         "border-radius: 10px;"
+         //"position: absolute;"
+         //"top: 300px;"
+         //"left: 20px;"
+      "}"
+      ".infoguest {"
+         //"margin:10px;"
+         "padding: 10px;"
+         "width: 400px;"
+         "background: grey;"
+         "border-radius: 10px;"
+         //"position: absolute;"
+         //"top: 700px;"
+         //"left: 20px;"
+      "}"
+      "span.left {"
+         "display: block;"
+         "margin: 10px;"
+         "width: auto;"
+         "height: auto;"
       "}"
       "</style>"
       
       // page html frontend data
-      "<p><h3>Homepage</h3></p>"
-      "<p>___</p>"
-      "<p>IP: %d.%d.%d.%d</p>"
-      "<p>MAC: %02x:%02x:%02x:%02x:%02x:%02x</p>"
-      "<p><div class='timecontainer'></div></p>"
-      "<p>___</p>"
-      "<p>FreeRTOS Version: %s</p>"
-      "<p><div class='rtoscontainer'></div></p>"
-      //"<p>Free Heap: %d bytes</p>"
-      //"<p>Running Tasks</p>"
-      //"<p>- Task 1: %s, Priority: %d</p>"
-      //"<p>- Task 2: %s, Priority: %d</p>"
-      //"<p>- Task 3: %s, Priority: %d</p>"
-      //"<p>- Task 4: %s, Priority: %d</p>"
-      //"<p>- Task 5: %s, Priority: %d</p>"
-      //"<p>- Task 6: %s, Priority: %d</p>"
-      //"<p>- Task 7: %s, Priority: %d</p>"
-      //"<p>___</p>"
-         
-      "<p>___</p>"
-      "<p>Guest counter: %d</p>" 
-      "<br />"
-         
+      //"<p><h3>Homepage</h3></p>"
+      "<div>"
+         "<span class='left'>"
+            "<div class='infogeneral'>"
+               "<p>IP: %d.%d.%d.%d</p>"
+               "<p>MAC: %02x:%02x:%02x:%02x:%02x:%02x</p>"
+               "<p><div class='timecontainer'></div></p>"
+            "</div>"
+         "</span>"
+         "<span class='left'>"
+            "<div class='infortos'>"
+               "<p>FreeRTOS Version: %s</p>"
+               "<p><div class='rtoscontainer'></div></p>"
+            "</div>"
+         "</span>"
+         "<span class='left'>"
+            "<div class='infoguest'>"
+               "<p>Guest counter: %d</p>" 
+            "</div>"
+         "</span>"
+      "</div>"
+
       "<div class='blackpill'>"
          "<div class='border'></div>"
          "<div class='usb'></div>"
@@ -839,17 +881,16 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "<div class='led'></div>"
          "<div class='pins1'></div>"
          "<div class='pins2'></div>"
-         "<div class='boardinfo'>"
-            "<p><div class='slidecontainer'>"
-               "Led Dimmer<input type='range' min='2' max='40' value=%d class='slider' id='myRange'>"
-            "</div></p>" 
-   
-            "<p><form action='led_pulse' method='post'><button  style='width:200px'>Led Pulse</button></form></p>"
-            "<p><div class='sensorcontainer'></div></p>"
-            //"<p>Temperature: %.1f C"
-            //"<p>Voltage: %.2f V</p>"
-         "</div>" 
       "</div>"
+         
+      "<div class='boardinfo'>"
+         "<p><div class='slidecontainer'>"
+            "Led Dimmer<input type='range' min='2' max='40' value=%d class='slider' id='myRange'>"
+         "</div></p>" 
+      
+         "<p><form action='led_pulse' method='post'><button  style='width:200px'>Led Pulse</button></form></p>"
+         "<p><div class='sensorcontainer'></div></p>"
+      "</div>" 
          
       "<script>"
       "var xhr=new XMLHttpRequest();"

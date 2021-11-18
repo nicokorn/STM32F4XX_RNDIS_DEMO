@@ -197,7 +197,7 @@ static void statusMonitorTask( void *pvParameters )
       }
 
       // measure temperature all 10 seconds
-      vTaskDelay(2000);
+      vTaskDelay(1000);
    }
 }
 
