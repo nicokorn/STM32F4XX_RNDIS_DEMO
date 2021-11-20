@@ -140,8 +140,11 @@ void monitor_deinit( void )
 /// \param     [in]  pvParameters
 ///
 /// \return    none
+#define TEMPARRSIZE  ( 4u )
 static void statusMonitorTask( void *pvParameters )
 {
+   static uint32_t            tempValues[4] = {21,21,21,21};
+   static uint8_t             tempIndex;
    static volatile uint32_t   ADC_Value;
    static volatile float      mvSensing;
    ADC_ChannelConfTypeDef     sConfig = {0};
@@ -163,7 +166,8 @@ static void statusMonitorTask( void *pvParameters )
 
       if(HAL_ADC_PollForConversion(&ADC_Handle, 100) == HAL_OK)
       {
-         ADC_Value = (&ADC_Handle)->Instance->DR;
+         tempValues[tempIndex++%TEMPARRSIZE] = (&ADC_Handle)->Instance->DR;
+         ADC_Value = (tempValues[0]+tempValues[1]+tempValues[2]+tempValues[3])>>2;
          HAL_ADC_Stop(&ADC_Handle);
          
          //temperature = __LL_ADC_CALC_TEMPERATURE_TYP_PARAMS( INTERNAL_TEMPSENSOR_AVGSLOPE, 

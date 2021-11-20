@@ -54,6 +54,11 @@ D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\ITAT_RNDIS\BrowseInfo\Application\User\Core
   D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM/../Core/Inc\monitor.h \
   D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM\..\Middlewares\Third_Party\printf-master\printf.h \
   C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.0\arm\inc\c\stdarg.h \
+  D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM/../USB_DEVICE/App\usb_device.h \
+  D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM/../Middlewares/ST/STM32_USB_Device_Library/Core/Inc\usbd_def.h \
+  D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM/../USB_DEVICE/Target\usbd_conf.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.0\arm\inc\c\stdio.h \
+  D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM/../Core/Inc\main.h \
   D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM/../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2\cmsis_os.h \
   D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM/../Middlewares/Third_Party/FreeRTOS/Source/include\FreeRTOS.h \
   D:\GitHub\STM32F4XX_RNDIS_DEMO\EWARM/../Core/Inc\FreeRTOSConfig.h \

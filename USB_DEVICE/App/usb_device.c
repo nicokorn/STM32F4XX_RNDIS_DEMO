@@ -113,6 +113,7 @@ void usb_deinit( void )
 inline void on_usbOutRxPacket(const char *data, int size)
 {
    rndis_statistic.counterRxFrame++;
+   rndis_statistic.counterRxData+=(uint32_t)size;
    queue_enqueue( (uint8_t*)data, size, &usbQueue );
    USBD_RNDIS_setBuffer( queue_getHeadBuffer( &usbQueue ) );
 }
@@ -125,7 +126,6 @@ inline void on_usbOutRxPacket(const char *data, int size)
 /// \return    none
 inline void on_usbInTxCplt( void )
 {
-   rndis_statistic.counterTxFrame++;
    queue_dequeue(&tcpQueue);
 }
 
@@ -142,7 +142,8 @@ uint8_t usb_output( uint8_t* dpointer, uint16_t length )
    {
       return 0;
    }
-   
+   rndis_statistic.counterTxFrame++;
+   rndis_statistic.counterTxData+=(uint32_t)length;
    return 1;
 }
 
@@ -184,6 +185,50 @@ void usb_forceHostEnum( void )
    GPIO_Init_Struct.Mode   = GPIO_MODE_OUTPUT_OD;
    GPIO_Init_Struct.Pull   = GPIO_PULLDOWN;
    HAL_GPIO_Init(GPIOA, &GPIO_Init_Struct);  
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Return transmitted frames.
+///
+/// \param     none
+///
+/// \return    uint32_t tx frames
+uint32_t usb_getTxFrames( void )
+{
+   return rndis_statistic.counterTxFrame;
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Return transmitted data.
+///
+/// \param     none
+///
+/// \return    uint32_t tx data
+uint32_t usb_getTxData( void )
+{
+   return rndis_statistic.counterTxData;
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Return received frames.
+///
+/// \param     none
+///
+/// \return    uint32_t rx frames
+uint32_t usb_getRxFrames( void )
+{
+   return rndis_statistic.counterRxFrame;
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Return received data.
+///
+/// \param     none
+///
+/// \return    uint32_t rx data
+uint32_t usb_getRxData( void )
+{
+   return rndis_statistic.counterRxData;
 }
 
 /********************** (C) COPYRIGHT Reichle & De-Massari *****END OF FILE****/

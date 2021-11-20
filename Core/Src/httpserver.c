@@ -51,6 +51,7 @@
 #include "led.h"
 #include "monitor.h"
 #include "printf.h"
+#include "usb_device.h"
 
 #include "cmsis_os.h"
 #include "FreeRTOS_IP.h"
@@ -100,7 +101,11 @@ static const char *webpage_top = {
    "<meta charset='utf-8'>"
    "<style type='text/css'>"
    // header text
-   "#box1 {background-color: orange; background-image: linear-gradient(red, black);}"
+   "#box1 {"
+      "background-image:linear-gradient(#34ace0, #227093);"
+      "padding:10px;"
+      "margin:10px;"
+   "}"
    "</style>"
       
    FAVICON
@@ -138,6 +143,7 @@ static void       httpserver_fetchTime       ( uint8_t* pageBuffer, uint16_t pag
 static void       httpserver_fetchTimeJSON   ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
 static void       httpserver_fetchRtosJSON   ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
 static void       httpserver_fetchSensorJSON ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
+static void       httpserver_fetchTcpIpJSON  ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
 static uint16_t   httpserver_favicon         ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
 static void       httpserver_205             ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
 static void       httpserver_204             ( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket );
@@ -338,6 +344,16 @@ static void httpserver_handle( void *pvParameters )
                // send sensor json object
                pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
                httpserver_fetchSensorJSON( pucTxBuffer, TXSMALL, xConnectedSocket );
+               vPortFree( pucTxBuffer );
+               
+               // listen to the socket again
+               continue;
+            }
+            else if(memcmp((char const*)uri, "/tcpip.json", 11u) == 0)
+            {
+               // send sensor json object
+               pucTxBuffer = ( uint8_t * ) pvPortMalloc( TXSMALL );
+               httpserver_fetchTcpIpJSON( pucTxBuffer, TXSMALL, xConnectedSocket );
                vPortFree( pucTxBuffer );
                
                // listen to the socket again
@@ -694,6 +710,7 @@ static void httpserver_homepage( uint8_t* pageBuffer, uint16_t pageBufferSize, S
 /// \param     [in]  Socket_t xConnectedSocket
 ///
 /// \return    none
+#define TILECOLOR "#34ace0;"
 static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
 {
    uint16_t 		   stringLength;
@@ -717,9 +734,11 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          
       // blackpill
       ".blackpill {"
-         "position: absolute;"
-         "top: 585px;"
-         "left: 550px;"
+         //"position: absolute;"
+         //"top: 585px;"
+         //"left: 550px;"
+         "height: auto;"
+         "width: 250px;"
          "transform: scale(0.5) rotate(270deg);"
       "}"
       ".border {"
@@ -728,16 +747,16 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "background-image: linear-gradient(grey, black);"
          "box-shadow: 0 0 1em black;"
          "position: absolute;"
-         "top: -135px;"
-         "left: -147px;"
+         "top: -150px;"
+         "left: -330px;"
       "}"
       ".usb {"
          "width: 150px;"
          "height: 150px;"
          "background: #666666;"
          "position: absolute;"
-         "top: -60px;"
-         "left: -170px;"
+         "top: -75px;"
+         "left: -353px;"
       "}"
       ".uc1 {"
          "width: 140px;"
@@ -745,8 +764,8 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "background: #666666;"
          "position: absolute;"
          "transform: rotate(45deg);"
-         "top: -60px;"
-         "left: 250px;"
+         "top: -75px;"
+         "left: 67px;"
       "}"
       ".uc2 {"
          "width: 130px;"
@@ -754,16 +773,16 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "background: #000000;"
          "position: absolute;"
          "transform: rotate(45deg);"
-         "top: -55px;"
-         "left: 255px;"
+         "top: -70px;"
+         "left: 72px;"
       "}"
       ".key1 {"
          "width: 90px;"
          "height: 60px;"
          "background: #CCCCCC;"
          "position: absolute;"
-         "top: 20px;"
-         "left: 550px;"
+         "top: 5px;"
+         "left: 367px;"
       "}"
       ".key2 {"
          "width: 55px;"
@@ -771,8 +790,8 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "background: #000000;"
          "position: absolute;"
          "border-radius: 100% 100% 100% 100%;"
-         "top: 22px;"
-         "left: 567px;"
+         "top: 7px;"
+         "left: 384px;"
       "}"
       ".led {"
          "width: 60px;"
@@ -780,117 +799,115 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "background-image: linear-gradient(blue, white);"
          "position: absolute;"
          "border-radius: 100% 100% 100% 100%;"
-         "top: -60px;"
-         "left: 565px;"
+         "top: -75px;"
+         "left: 382px;"
       "}"
       ".pins1 {"
          "width: 850px;"
          "height: 20px;"
          "background: #EBDC03;"
          "position: absolute;"
-         "top: -120px;"
-         "left: -120px;"
+         "top: -135px;"
+         "left: -303px;"
       "}"
       ".pins2 {"
          "width: 850px;"
          "height: 20px;"
          "background: #EBDC03;"
          "position: absolute;"
-         "top: 130px;"
-         "left: -120px;"
-      "}"
-      ".boardinfo {"
-         //"margin:10px;"
-         "padding: 10px;"
-         "width: 250px;"
-         "background: grey;"
-         "border-radius: 10px;"
-         //"position: absolute;"
-         //"transform: scale(2) rotate(90deg);"
-         //"top: 300px;"
-         //"left: 480px;"
+         "top: 115px;"
+         "left: -303px;"
       "}"
       ".infogeneral {"
-         //"margin:10px;"
          "padding: 10px;"
-         "width: 400px;"
-         "background: grey;"
+         "margin: 20px;"
+         "width: 360px;"
+         "background: "TILECOLOR
+         "color: white;"
          "border-radius: 10px;"
-         //"position: absolute;"
-         //"top: 100px;"
-         //"left: 20px;"
+         "box-shadow: 0 0 1em #ffb142;"
       "}"
       ".infortos {"
-         //"margin:10px;"
          "padding: 10px;"
-         "width: 400px;"
-         "background: grey;"
+         "margin: 20px;"
+         "width: 360px;"
+         "background: "TILECOLOR
+         "color: white;"
          "border-radius: 10px;"
-         //"position: absolute;"
-         //"top: 300px;"
-         //"left: 20px;"
+         "box-shadow: 0 0 1em #ffb142;"
       "}"
-      ".infoguest {"
-         //"margin:10px;"
+      ".infoboard {"
          "padding: 10px;"
-         "width: 400px;"
-         "background: grey;"
+         "margin: 20px;"
+         "width: 280px;"
+         "background: "TILECOLOR
+         "color: white;"
          "border-radius: 10px;"
-         //"position: absolute;"
-         //"top: 700px;"
-         //"left: 20px;"
+         "box-shadow: 0 0 1em #ffb142;"
       "}"
-      "span.left {"
-         "display: block;"
-         "margin: 10px;"
-         "width: auto;"
-         "height: auto;"
+      ".infotcpip {"
+         "padding: 10px;"
+         "margin: 20px;"
+         "width: 280px;"
+         "height: 285px;"
+         "background: "TILECOLOR
+         "color: white;"
+         "border-radius: 10px;"
+         "box-shadow: 0 0 1em #ffb142;"
+      "}"
+      "table.main {"
+         "margin-left: auto;" 
+         "margin-right: auto;"
       "}"
       "</style>"
       
-      // page html frontend data
-      //"<p><h3>Homepage</h3></p>"
-      "<div>"
-         "<span class='left'>"
+      "<table class='main'>"
+         
+        "<td style='vertical-align:top;'>"
             "<div class='infogeneral'>"
+               "<p><h3>System Info</h3></p>"
                "<p>IP: %d.%d.%d.%d</p>"
                "<p>MAC: %02x:%02x:%02x:%02x:%02x:%02x</p>"
                "<p><div class='timecontainer'></div></p>"
+               "<p>Guest counter: %d</p>" 
             "</div>"
-         "</span>"
-         "<span class='left'>"
             "<div class='infortos'>"
+               "<p><h3>RTOS Info</h3></p>"
                "<p>FreeRTOS Version: %s</p>"
                "<p><div class='rtoscontainer'></div></p>"
             "</div>"
-         "</span>"
-         "<span class='left'>"
-            "<div class='infoguest'>"
-               "<p>Guest counter: %d</p>" 
+         "</td>"
+            
+         "<td style='vertical-align:center;'>"
+            "<div class='blackpill'>"
+               "<div class='border'></div>"
+               "<div class='usb'></div>"
+               "<div class='uc1'></div>"
+               "<div class='uc2'><font size='4' face='verdana' color='white'>STM32F411</font></div>"
+               "<div class='key1'></div>"
+               "<div class='key2'></div>"
+               "<div class='led'></div>"
+               "<div class='pins1'></div>"
+               "<div class='pins2'></div>"
             "</div>"
-         "</span>"
-      "</div>"
-
-      "<div class='blackpill'>"
-         "<div class='border'></div>"
-         "<div class='usb'></div>"
-         "<div class='uc1'></div>"
-         "<div class='uc2'><font size='4' face='verdana' color='white'>STM32F411</font></div>"
-         "<div class='key1'></div>"
-         "<div class='key2'></div>"
-         "<div class='led'></div>"
-         "<div class='pins1'></div>"
-         "<div class='pins2'></div>"
-      "</div>"
-         
-      "<div class='boardinfo'>"
-         "<p><div class='slidecontainer'>"
-            "Led Dimmer<input type='range' min='2' max='40' value=%d class='slider' id='myRange'>"
-         "</div></p>" 
-      
-         "<p><form action='led_pulse' method='post'><button  style='width:200px'>Led Pulse</button></form></p>"
-         "<p><div class='sensorcontainer'></div></p>"
-      "</div>" 
+         "</td>"
+            
+         "<td style='vertical-align:top;'>"
+            "<div class='infoboard'>"
+               "<p><h3>Peripherals</h3></p>"
+               "<p><div class='slidecontainer'>"
+                  "Led Dimmer<input type='range' min='2' max='40' value=%d class='slider' id='myRange'>"
+               "</div></p>" 
+               "<p><form action='led_pulse' method='post'><button style='width:200px;border-radius:4px;'>Led Pulse</button></form></p>"
+               "<p><div class='sensorcontainer'></div></p>"
+            "</div>" 
+            "<div class='infotcpip'>"
+               "<p><h3>TCP/IP Statistics</h3></p>"
+               "<p><div class='tcpipcontainer'></div></p>"
+            "</div>" 
+         "</td>"
+            
+      "</table>"
          
       "<script>"
       "var xhr=new XMLHttpRequest();"
@@ -953,14 +970,17 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "let html = '';"
          "let htmlSegment = `<div class='rtos'>"
                                  "<p>Free Heap: ${rtos.heap} bytes</p>"
-                                 "<p>Running Tasks</p>"
-                                 "<p>- Task 1: ${rtos.t1n}, Priority: ${rtos.t1p}</p>"
-                                 "<p>- Task 2: ${rtos.t2n}, Priority: ${rtos.t2p}</p>"
-                                 "<p>- Task 3: ${rtos.t3n}, Priority: ${rtos.t3p}</p>"
-                                 "<p>- Task 4: ${rtos.t4n}, Priority: ${rtos.t4p}</p>"
-                                 "<p>- Task 5: ${rtos.t5n}, Priority: ${rtos.t5p}</p>"
-                                 "<p>- Task 6: ${rtos.t6n}, Priority: ${rtos.t6p}</p>"
-                                 "<p>- Task 7: ${rtos.t7n}, Priority: ${rtos.t7p}</p>"
+                                 "<table style='color:white'>"
+                                    "<tr><td>Running Tasks</td></tr>"
+                                    "<tr><td style='width:150px'>Name</td><td style='width:50px'>Priority</td></tr>"
+                                    "<tr><td>${rtos.t1n}</td><td>${rtos.t1p}</td></tr>"
+                                    "<tr><td>${rtos.t2n}</td><td>${rtos.t2p}</td></tr>"
+                                    "<tr><td>${rtos.t3n}</td><td>${rtos.t3p}</td></tr>"
+                                    "<tr><td>${rtos.t4n}</td><td>${rtos.t4p}</td></tr>"
+                                    "<tr><td>${rtos.t5n}</td><td>${rtos.t5p}</td></tr>"
+                                    "<tr><td>${rtos.t6n}</td><td>${rtos.t6p}</td></tr>"
+                                    "<tr><td>${rtos.t7n}</td><td>${rtos.t7p}</td></tr>"
+                                 "</table>"
                               "</div>`;"
          "html += htmlSegment;"
       
@@ -968,7 +988,7 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "rtoscontainer.innerHTML = html;"
       "};"
          
-      "setInterval(renderRtos, 10000);"
+      //"setInterval(renderRtos, 10000);"
       "renderRtos();"
          
       // rtos data fetch method
@@ -996,8 +1016,37 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "sensorcontainer.innerHTML = html;"
       "};"
          
-      "setInterval(renderSensor, 500);"
+      "setInterval(renderSensor, 1000);"
       "renderSensor();"
+         
+      // tcp ip data fetch method
+      "async function getTcpIp(){"
+         "let url = 'tcpip.json';"
+         "try{"
+            "let res = await fetch(url);"
+            "return await res.json();"
+         "}catch(error){"
+            "console.log(error);"
+         "}"
+      "};"
+         
+      "async function renderTcpIp(){"
+         "let tcpip = await getTcpIp();"
+         "let html = '';"
+         "let htmlSegment = `<div class='tcpip'>"
+                                 "<p>Received Ethernet Frames: ${tcpip.rxF}</p>"
+                                 "<p>Received Data: ${tcpip.rxD} Bytes</p>"
+                                 "<p>Transmitted Ethernet Frames: ${tcpip.txF}</p>"
+                                 "<p>Transmitted Data: ${tcpip.txD} Bytes</p>"
+                              "</div>`;"
+         "html += htmlSegment;"
+      
+         "let tcpipcontainer = document.querySelector('.tcpipcontainer');"
+         "tcpipcontainer.innerHTML = html;"
+      "};"
+         
+      "setInterval(renderTcpIp, 1000);"
+      "renderTcpIp();"
 
       "</script>"
    };
@@ -1023,15 +1072,15 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
    stringLength = snprintf(0, 0, webpage_panelcontrollerMonitor, 
                            ipAddress8b[0], ipAddress8b[1], ipAddress8b[2], ipAddress8b[3], 
                            stackMacAddress[0], stackMacAddress[1], stackMacAddress[2], stackMacAddress[3], stackMacAddress[4], stackMacAddress[5], 
+                           guestCounter,
                            tskKERNEL_VERSION_NUMBER,
-                           dutyCycle, 
-                           guestCounter );
+                           dutyCycle);
    snprintf((char*)pageBuffer, stringLength+1, webpage_panelcontrollerMonitor, 
                            ipAddress8b[0], ipAddress8b[1], ipAddress8b[2], ipAddress8b[3], 
                            stackMacAddress[0], stackMacAddress[1], stackMacAddress[2], stackMacAddress[3], stackMacAddress[4], stackMacAddress[5], 
+                           guestCounter,
                            tskKERNEL_VERSION_NUMBER, 
-                           dutyCycle, 
-                           guestCounter );
+                           dutyCycle);
    
    // send fragment of the webpage//////////////////////////////////////////////
    if( stringLength < pageBufferSize )
@@ -1280,6 +1329,54 @@ static void httpserver_fetchSensorJSON( uint8_t* pageBuffer, uint16_t pageBuffer
                            btnState,
                            temperature,
                            voltage);
+   
+   httpserver_lastPacket( xConnectedSocket );
+   FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );
+}
+
+// ----------------------------------------------------------------------------
+/// \brief     Send tcp/ip data as json fragment of the page. For the js fetch method.
+///
+/// \param     [in]  uint8_t* pageBuffer
+/// \param     [in]  uint16_t pageBufferSize
+/// \param     [in]  Socket_t xConnectedSocket
+///
+/// \return    none
+static void httpserver_fetchTcpIpJSON( uint8_t* pageBuffer, uint16_t pageBufferSize, Socket_t xConnectedSocket )
+{
+   uint16_t          stringLength;
+   uint32_t          rxFrames;
+   uint32_t          txFrames;
+   uint32_t          rxData;
+   uint32_t          txData;
+
+   static const char *webpage_fetchTcpip = {
+      "HTTP/1.1 200 OK\r\n"
+      "Content-Type: application/json\r\n\r\n"
+      "{"
+         "\"rxF\": \"%d\","
+         "\"txF\": \"%d\","
+         "\"rxD\": \"%d\","
+         "\"txD\": \"%d\""
+      "}"
+   };
+   
+   txFrames    = usb_getTxFrames();
+   txData      = usb_getTxData();
+   rxFrames    = usb_getRxFrames();
+   rxData      = usb_getRxData();
+   
+   stringLength = snprintf(0, 0, webpage_fetchTcpip, 
+                           rxFrames,
+                           txFrames,
+                           rxData,
+                           txData);
+      
+   snprintf((char*)pageBuffer, stringLength+1, webpage_fetchTcpip, 
+                           rxFrames,
+                           txFrames,
+                           rxData,
+                           txData);
    
    httpserver_lastPacket( xConnectedSocket );
    FreeRTOS_send( xConnectedSocket, pageBuffer, stringLength, 0 );

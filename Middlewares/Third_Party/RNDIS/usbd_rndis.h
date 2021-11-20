@@ -90,6 +90,8 @@ typedef struct BUS_UART_STATISTIC_s
 {
    uint32_t                      counterRxFrame;               ///< counter for valid frames
    uint32_t                      counterTxFrame;               ///< counter for valid frames
+   uint32_t                      counterRxData;                ///< counter for valid data
+   uint32_t                      counterTxData;                ///< counter for valid data
 }RNDIS_USB_STATISTIC_t;
 
 // Exported functions *********************************************************

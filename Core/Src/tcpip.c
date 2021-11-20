@@ -74,6 +74,8 @@ typedef struct MAC_STATISTIC_s
    uint32_t counterTxError;
    uint32_t counterRxFrame;
    uint32_t counterTxFrame;
+   uint32_t counterRxData;
+   uint32_t counterTxData;
 }MAC_STATISTIC_t;
 
 // Global variables ***********************************************************
