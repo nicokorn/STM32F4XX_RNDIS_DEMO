@@ -12,7 +12,7 @@ Usage:
 <br>To have platform independent network interfaces over usb which is working with Linux, Windows, Mac OS ect.
 
 Demo video:
-<br>https://www.youtube.com/watch?v=yCingW1lEwQ
+<br>https://www.youtube.com/watch?v=RZCC-pTSQWE
 
 Description:
 <br> Remote NDIS (RNDIS) is a bus-independent class specification for Ethernet (802.3) network devices on dynamic Plug and Play (PnP) buses such as USB, 1394, Bluetooth, and InfiniBand. Remote NDIS defines a bus-independent message protocol between a host computer and a Remote NDIS device over abstract control and data channels. Remote NDIS is precise enough to allow vendor-independent class driver support for Remote NDIS devices on the host computer.
@@ -33,7 +33,7 @@ Info:
 <br>The rndis library is based on the library from Sergey Fetisov: https://github.com/fetisov/lrndis and is using a rndis protocol library from Colin O'Flynn. Many thanks for your efforts! For more general information about RNDIS visit: https://docs.microsoft.com/de-de/windows-hardware/drivers/network/overview
 
 <br>Versions: 
-<br>STM32F4XX_RNDIS_DEMO 0.3.0.0 
+<br>STM32F4XX_RNDIS_DEMO 0.3.0.2 
 <br>FreeRTOS Kernel V10.3.1 
 <br>STM32Cube_FW_F4_V1.26.0 
 <br>STM32CubeMX 6.3.0 
