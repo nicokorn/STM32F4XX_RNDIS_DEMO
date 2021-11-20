@@ -26,7 +26,7 @@ Data handling on the rndis usb interface is zero copy -> As soon as a complete f
 It should be easy to port the library to other st mcu's. Generate a new cdc usb project with cubemx and replace the usb relevant rndis files with the ones from this project.
 
 Pictures:
-<br><img src="https://github.com/nicokorn/STM32F4XX_RNDIS_DEMO/blob/main/docs/screenshot.PNG" alt="px1">
+<br><img src="https://github.com/nicokorn/STM32F4XX_RNDIS_DEMO/blob/main/docs/screenshot0302.PNG" alt="px1">
 <br><img src="https://github.com/nicokorn/STM32F4XX_RNDIS_DEMO/blob/main/docs/blackpill.PNG" alt="px2">
 
 Info: 
