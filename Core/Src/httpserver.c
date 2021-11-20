@@ -7,7 +7,7 @@
 ///
 /// \author    Nico Korn
 ///
-/// \version   0.3.0.2 - experimental, not yet released
+/// \version   0.3.0.2
 ///
 /// \date      14112021
 /// 
@@ -120,7 +120,7 @@ static const char *webpage_top = {
    "<body><div class='main'>"
    // Top header bar ////////////////////////////////////////////////////////
    "<p><div id='box1' style='height:55;'>"
-   "<font size='20' font color='white'><b>RNDIS HTTP Server Example</b></font>"
+   "<font size='20' font color='white'><b>RNDIS HTTP Server Example - v0.3.0.2</b></font>"
    "</div></p>"
    //////////////////////////////////////////////////////////////////////////
    "<br />"
@@ -849,7 +849,7 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "padding: 10px;"
          "margin: 20px;"
          "width: 280px;"
-         "height: 285px;"
+         "height: 298px;"
          "background: "TILECOLOR
          "color: white;"
          "border-radius: 10px;"
