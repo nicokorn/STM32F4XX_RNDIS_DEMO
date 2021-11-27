@@ -66,8 +66,8 @@
 #define TXBIG           ( 7000u )
 #define TXSMALL         ( 256u )
 #define TXMEDIUM        ( 512u )
-#define FAVICON         "<link rel=\"shortcut icon\" href=\"data:image/gif;base64,R0lGODlhIAAgAHAAACwAAAAAIAAgAIf////s2+Pqt8j/wNT/v836wsv/xM7/wM7/w9L6ws38uMP4ZHTQCyfgAB7cABnXBhzeBh7bABjiAR/iAB3UAC3wdYfZAwvdAybkAyHqBivjABrgAyblASbiASHjAiLkACXwZ4XkABHsBDTgBCjVASnfASbgBS3eACnhACjiASnXBR7tfpHdAxHpAC3sAifiACXtACXiACbfACXjASfjABnmY3XbBgrYAB7qAB3tAB3tABrgAB3iAB7hAB7ZCCX31+z7vbLjycztw8T0v8fxw8Puysr3vsf1wMj/s6/6v93+m57oo7Xxnaz/nrX3m6rworD9mbH5nLH6nbL1pKPhaXLbBQPfABvhABDrAx3pABDeABDjABbfABXgARbdASXgfY/iABD9AjfcACLTByjoByfgAiffAyfkABvya4ngABDvAzPUAyLfASjjAiTlACndASfeACXkARzleIvZBRHqACvhACLoACjeASDnASjdBCHpaH7gDhfkAyvkBSLqACfeBSDgBybnBSrkBCbjACn67//3x7vz2N354Nz/0+D62t310tj72dr62Nn9zcH4rc7zgobqjKTskJ/6gaDvjqLsiKDwip/viZ7lhYnuanjjDhDjACDhABfmABjdARrnAh/hABniABruAS/ddILTBAzqACjiBiLsCC3hASPkAyPlBCTYAh72b4/iABXwBDXUAyPeACvlACvdACvdACbeACfgAinhBR7vdXLVABnnABvSARflBSDdBB/mAB/vaHnmEz70FULfFzvsFD3lFD7pCzrnEDrVFDMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI/wABCBxIsKDBgwgTKlzIsKHDhxAjPvwhABEBAgYIWDTAsWPGhwEcXeR4caQAjCcVPKyRS4uWllrEuJQpE4aWNQ8rxBSjRowYGD6BAv0p5iEILT19xopFtKnPh5a0wOgJYyhPnz3VaFlZZU2WqkFpii3q8IeCIEWKFCoiwMDJIigJAHmYRMkTJk2gPIHCly9evlMeUqniMksWwi4TJybbUJSWMGLWXFUqhinTrQ6PqlkTayhTykEfOhaK9SfVqU8zZ2I6VM1Qq0AhFklEKFGiQwFu07Ztm9FDRxUsWZIECZJw4Y+OW7L1sBfiLC5tztQCHanoUVl9EgUrNJdRpKU/Ky5dyvShLTFZcml/7TPLT8wNexX7JezXfDXFiOknZp9YMYkABijggAQWaOCBAAQEADs=\" />"
-
+#define FAVICON         "<link href='data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAA4f8AAAAAAPo+GQCBs/8AAAD/ABYtUAAFESgADAz6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAERVVURVVUREREVVRFVURERERd3EXdxERETN3d3d3MxERMzcHB3MzEREzInd3IjMRESIiciciIhEREiJyJyIhERERInIiERERERETMzMzERERFmMzNmZhEREWNmMzYzMRERY2MzEzMREREWZjMTERERERREREREEREREUREQRERHhhwAA8Y8AAPGPAADAAwAAwAMAAMADAADAAwAA4AcAAPA/AAD4DwAA4AcAAOADAADgBwAA8B8AAPAHAAD4PwAA' rel='icon' type='image/x-icon' />"
+#define JSONHEADER      "HTTP/1.1 200 OK\r\nContent-Type: application/json; charset=utf-8\r\nX-Content-Type-Options: nosniff\r\nCache-Control: no-cache\r\n\r\n"
 // Private types     **********************************************************
 
 // Private variables **********************************************************
@@ -97,6 +97,7 @@ static const char *webpage_top = {
    //"Keep-Alive: timeout=20\r\n" 
    //"Connection: keep-alive\r\n\r\n"
 
+   "<!DOCTYPE html>"
    "<html lang='en'><head>"
    "<meta charset='utf-8'>"
    "<style type='text/css'>"
@@ -826,6 +827,7 @@ static void httpserver_homepageFetch( uint8_t* pageBuffer, uint16_t pageBufferSi
          "color: white;"
          "border-radius: 10px;"
          "box-shadow: 0 0 1em #ffb142;"
+         //"animation: fadeIn linear 5s;"
       "}"
       ".infortos {"
          "padding: 10px;"
@@ -1163,8 +1165,7 @@ static void httpserver_fetchTimeJSON( uint8_t* pageBuffer, uint16_t pageBufferSi
    uint32_t seconds;
 
    static const char *webpage_fetchTime = {
-      "HTTP/1.1 200 OK\r\n"
-      "Content-Type: application/json\r\n\r\n"
+      JSONHEADER
       "{"
         "\"d\": \"%d\","
         "\"h\": \"%d\","
@@ -1208,8 +1209,7 @@ static void httpserver_fetchRtosJSON( uint8_t* pageBuffer, uint16_t pageBufferSi
    TaskStatus_t      *task;
 
    static const char *webpage_fetchRtos = {
-      "HTTP/1.1 200 OK\r\n"
-      "Content-Type: application/json\r\n\r\n"
+      JSONHEADER
       "{"
          // heap
         "\"heap\": \"%d\","
@@ -1300,8 +1300,7 @@ static void httpserver_fetchSensorJSON( uint8_t* pageBuffer, uint16_t pageBuffer
    const char*       btnState;
 
    static const char *webpage_fetchSensor = {
-      "HTTP/1.1 200 OK\r\n"
-      "Content-Type: application/json\r\n\r\n"
+      JSONHEADER
       "{"
         "\"btn\": \"%s\","
         "\"temp\": \"%.1f\","
@@ -1351,8 +1350,7 @@ static void httpserver_fetchTcpIpJSON( uint8_t* pageBuffer, uint16_t pageBufferS
    uint32_t          txData;
 
    static const char *webpage_fetchTcpip = {
-      "HTTP/1.1 200 OK\r\n"
-      "Content-Type: application/json\r\n\r\n"
+      JSONHEADER
       "{"
          "\"rxF\": \"%d\","
          "\"txF\": \"%d\","

@@ -20,7 +20,7 @@
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>2546571540</Checksum>
+        <Checksum>2791121638</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -52,8 +52,8 @@
         <ITMlogFile>$PROJ_DIR$\ITM.log</ITMlogFile>
     </SWOTraceHWSettings>
     <PlDriver>
-        <FirstRun>0</FirstRun>
         <MemConfigValue>C:\Program Files\IAR Systems\Embedded Workbench 9.0\arm\CONFIG\debugger\ST\STM32F411CC.ddf</MemConfigValue>
+        <FirstRun>0</FirstRun>
     </PlDriver>
     <JLinkDriver>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
@@ -129,15 +129,6 @@
         <ShowTimeSum>1</ShowTimeSum>
         <SumSortOrder>0</SumSortOrder>
     </EventLog>
-    <TermIOLog>
-        <LoggingEnabled>_ 0</LoggingEnabled>
-        <LogFile>_ ""</LogFile>
-    </TermIOLog>
-    <LogFile>
-        <LoggingEnabled>_ 0</LoggingEnabled>
-        <LogFile>_ ""</LogFile>
-        <Category>_ 0</Category>
-    </LogFile>
     <DriverProfiling>
         <Enabled>0</Enabled>
         <Mode>3</Mode>
@@ -166,8 +157,17 @@
         <Bp3>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd.c}.1271.9" 0 0 1 "" 0 "" 0</Bp3>
         <Count>4</Count>
     </Breakpoints2>
+    <LogFile>
+        <LoggingEnabled>_ 0</LoggingEnabled>
+        <LogFile>_ ""</LogFile>
+        <Category>_ 0</Category>
+    </LogFile>
     <Aliases>
         <Count>0</Count>
         <SuppressDialog>0</SuppressDialog>
     </Aliases>
+    <TermIOLog>
+        <LoggingEnabled>_ 0</LoggingEnabled>
+        <LogFile>_ ""</LogFile>
+    </TermIOLog>
 </settings>
