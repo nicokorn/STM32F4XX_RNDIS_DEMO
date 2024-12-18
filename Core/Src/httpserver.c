@@ -461,25 +461,25 @@ static void httpserver_handle( void *pvParameters )
          etimeout++;                                                       
          break;    
       }
-      else if( lengthOfbytes == pdFREERTOS_ERRNO_ENOMEM )                                                                                        
+      else if( lengthOfbytes == -pdFREERTOS_ERRNO_ENOMEM )
       {                                                                                                                    
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                   
          enomem++;                                                      
          break;
       } 
-      else if( lengthOfbytes == pdFREERTOS_ERRNO_ENOTCONN )                                                                   
+      else if( lengthOfbytes == -pdFREERTOS_ERRNO_ENOTCONN )
       {                                                                                                                       
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                      
          enotconn++;                                                        
          break;
       } 
-      else if( lengthOfbytes == pdFREERTOS_ERRNO_EINTR )                                                                      
+      else if( lengthOfbytes == -pdFREERTOS_ERRNO_EINTR )
       {                                                                                                                       
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                      
          eintr++;                                                        
          break;
       } 
-      else if( lengthOfbytes == pdFREERTOS_ERRNO_EINVAL )                                                                      
+      else if( lengthOfbytes == -pdFREERTOS_ERRNO_EINVAL )
       {                                                                                                                       
          // Error (maybe the connected socket already shut down the socket?). Attempt graceful shutdown.                      
          einval++;                                                          
